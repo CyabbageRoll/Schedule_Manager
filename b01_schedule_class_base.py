@@ -72,9 +72,11 @@ class ScheduleManageBase:
         l1 = self._l1_layout()
         l2 = self._l2_layout()
         l3 = self._l3_layout()
+        l0 = self._l0_layout()
+
 
         # tab group
-        lt = [sg.TabGroup([l1, l2, l3], size=self.sizes["left_tab_group"], enable_events=True, key="-lt_grp_00-")]
+        lt = [sg.TabGroup([l1, l2, l3, l0], size=self.sizes["left_tab_group"], enable_events=True, key="-lt_grp_00-")]
         return lt
 
 
@@ -105,6 +107,7 @@ class ScheduleManageBase:
         l2 = [sg.Tab("Status", [l2_tx1], key="-l2_tbg_00-")]
         return l2
 
+
     def _l3_layout(self):
 
         l3_tx1 = [sg.Text("You are able to update only your ticket priority")]
@@ -115,18 +118,36 @@ class ScheduleManageBase:
 
         grp_rclick_menu = ["menu", ["Scheduling_", "Edit_", "New ticket FROM this_", "New ticket TO this_"] + ["Status", [f"{s}_" for s in self.param["status"]]]]
         tbl_tmp = [""] * len(self.param["priority_list"])
-        l3_tbl = [sg.Table(tbl_tmp, headings=self.param["priority_list"], auto_size_columns=False, def_col_width=self.sizes["left3_col_width"][0], num_rows=70, vertical_scroll_only=True, justification="center", enable_events=True, right_click_menu=grp_rclick_menu, key="-l3_tbl_00-")]
+        l3_tbl = [sg.Table(tbl_tmp, headings=self.param["priority_list"], auto_size_columns=False, def_col_width=self.sizes["left3_col_width"][0], row_height=self.sizes["tbl_row_hight"], num_rows=70, vertical_scroll_only=True, justification="center", enable_events=True, right_click_menu=grp_rclick_menu, key="-l3_tbl_00-")]
 
         # button
-        btn_list = ["⏫", "🔼", "🔽", "⏬"]
+        btn_list = ["⏫", "🔼", "🔽", "⏬", "🖥"]
         l3_btn = [[sg.Button(name, key=f"-l3_btn_{i:02d}-", size=self.sizes["header_button"])] for i, name in enumerate(btn_list)]
         l3_btn = [l3_tx2] + l3_btn
-
-        l3_cl1 = [sg.Column(l3_btn, size=self.sizes["left_tab_group"])]
+        l3_cbx2 = [[sg.Checkbox(text="Auto activate", default=self.param["auto_priority_activate"], key="-l3_cbx_20-")]]
+        l3_cl1 = [sg.Column(l3_btn + l3_cbx2, size=self.sizes["left_tab_group"])]
 
         # l3 = [sg.Tab("Priority", [self.l3_cbx, l3_tbl], key="-l3_tbg_00-")]
         l3 = [sg.Tab("Priority", [l3_tx1, l3_tbl+l3_cl1], key="-l3_tbg_00-")]
         return l3
+
+
+    def _l0_layout(self):
+
+        l0_tx1 = [sg.Text("Setting Tab")]
+        l0_btn = [sg.Button("Save & Restart", key="-l0_btn_00-", size=self.sizes["header_button"])]
+        
+        l0_SET = []
+        for setting, input_type in zip(self.SETTINGS_DIR, self.SETTINGS_DIR_TYPE):
+            l0_SET.append([sg.Text(setting, size=self.sizes["header_chkbox"])] + [sg.Input(self.df_settings.loc[setting, i+1], key=f"-{setting}_{i:02d}-", size=self.sizes["right_input"]) for i, _ in enumerate(input_type)])
+        for setting, input_type in zip(self.SETTINGS_PARAM, self.SETTINGS_PARAM_TYPE):
+            l0_SET.append([sg.Text(setting, size=self.sizes["header_chkbox"])] + [sg.Input(self.df_settings.loc[setting, i+1], key=f"-{setting}_{i:02d}-", size=self.sizes["right_input"]) for i, _ in enumerate(input_type)])
+        for setting, input_type in zip(self.SETTINGS_SIZE, self.SETTINGS_SIZE_TYPE):
+            l0_SET.append([sg.Text(setting, size=self.sizes["header_chkbox"])] + [sg.Input(self.df_settings.loc[setting, i+1], key=f"-{setting}_{i:02d}-", size=self.sizes["right_input"]) for i, _ in enumerate(input_type)])
+
+        l0 = [sg.Tab("Settings", [l0_tx1, l0_btn] + l0_SET)]
+        return l0
+
 
     # %% =======================================================================
     # right tab
@@ -140,14 +161,14 @@ class ScheduleManageBase:
         r5 = self._r5_layout()
         r6 = self._r6_layout()
 
-        rt = [sg.TabGroup([r1, r2, r3, r4, r5, r6], size=self.sizes["rihgt_tab_group"], key="-rt_grp_00-")]
+        rt = [sg.TabGroup([r1, r2, r3, r4, r5], size=self.sizes["rihgt_tab_group"], key="-rt_grp_00-")]
         return rt
 
 
     def _r1_layout(self):
 
         # button
-        btn_list = ["Apply"]
+        btn_list = ["Apply", "Delete"]
         r1_btn = [sg.Button(name, key=f"-r1_btn_{i:02d}-", size=self.sizes["right_button"]) for i, name in enumerate(btn_list)]
         
         # texts
@@ -173,7 +194,7 @@ class ScheduleManageBase:
         cbx_list = [[name, False, f"-r1_cbx_{i:02d}-"] for i, name in enumerate(cbx_list)]
         r1_cbx = [sg.Checkbox(text=name, default=tf, key=key, size=self.sizes["header_chkbox"], enable_events=False) for name, tf, key in cbx_list]
 
-        layout = [r1_btn[0:1], 
+        layout = [r1_btn, 
                   r1_txt[0:4], self.r1_inp[0:4],
                   r1_txt[4:8], self.r1_inp[4:8],
                   r1_txt[8:10], r1_cmb[0:2], 
@@ -183,7 +204,16 @@ class ScheduleManageBase:
                   r1_cbx]
         r1_clm = [sg.Column(layout)]
 
-        r1 = [sg.Tab("planing", [r1_clm], key="r1")]
+        r1_txt1 = [sg.Text("➡ 🎫 ➡")]
+        r1_txt2 = [sg.Text("Previous")]
+        r1_txt3 = [sg.Text("Next")]
+        r1_tbl2 = [sg.Table([["Tickets"]], auto_size_columns=False, def_col_width=self.sizes["r1_table_width"], row_height=self.sizes["tbl_row_hight"], num_rows=40, vertical_scroll_only=True, justification="left", enable_events=True, key="-r1_tbl_02-")]
+        r1_tbl3 = [sg.Table([["Tickets"]], auto_size_columns=False, def_col_width=self.sizes["r1_table_width"], row_height=self.sizes["tbl_row_hight"], num_rows=40, vertical_scroll_only=True, justification="left", enable_events=True, key="-r1_tbl_03-")]
+        r1_clm2 = [sg.Column([r1_txt2, r1_tbl2])]
+        r1_clm3 = [sg.Column([r1_txt3, r1_tbl3])]
+        r1_clm1 = [sg.Column([r1_clm2 + r1_txt1 + r1_clm3])]
+
+        r1 = [sg.Tab("planing", [r1_clm, r1_clm1], key="r1")]
         return r1
 
 
@@ -197,7 +227,7 @@ class ScheduleManageBase:
 
         tbl_tmp = [["", "", ""]] * self.param["dailytable_rows"]
         tbl_headings = ["Daily Schedule","time","Outlook"]
-        r2_tbl = [sg.Table(tbl_tmp, headings=tbl_headings, auto_size_columns=False, col_widths=[30,8,20], num_rows=self.param["dailytable_disp_rows"], justification="center", enable_events=False, key="-r2_tbl_00-")]
+        r2_tbl = [sg.Table(tbl_tmp, headings=tbl_headings, auto_size_columns=False, col_widths=self.sizes["r2_table_width"], row_height=self.sizes["tbl_row_hight"], num_rows=self.param["dailytable_disp_rows"], justification="center", enable_events=False, key="-r2_tbl_00-")]
         # r2_col1 = [sg.Column([r2_tbl], scrollable=True, size=self.sizes["right_daily_table"])]
 
         r2_cbx = [sg.Checkbox(text="activate left click", default=False, p=0, key="-r2_cbx_00-")]
@@ -211,9 +241,15 @@ class ScheduleManageBase:
 
     def _r3_layout(self):
 
-        r3_inp = [sg.Multiline("", size=self.sizes["right_team_box"], key="-r3_mul_00-")]
+        btn_list = ["📨", "🗂", "🗒"]
+        r3_btn = [sg.Button(name, key=f"-r3_btn_{i:02d}-", size=(int(self.sizes["header_button"][0]*1.2),self.sizes["header_button"][1])) for i, name in enumerate(btn_list)]
 
-        r3 = [sg.Tab("team", [r3_inp], key="r3")]
+        r3_txt1 = [sg.Text("working hour")]
+        r3_inp1 = [sg.Multiline("", size=self.sizes["right_team_box"], key="-r3_mul_00-")]
+        r3_txt2 = [sg.Text("imformation")]
+        r3_inp2 = [sg.Multiline("", size=self.sizes["right_team_box"], key="-r3_mul_01-")]
+
+        r3 = [sg.Tab("team", [r3_btn, r3_txt1, r3_inp1, r3_txt2, r3_inp2], key="r3")]
         return r3
 
 
@@ -227,9 +263,19 @@ class ScheduleManageBase:
 
     def _r5_layout(self):
 
-        r5_tx1 = [sg.Text("Right box tmp")]
+        r5_btn0 = [sg.Button("◀︎", size=(1,1), key="-r5_btn_00-")]
+        r5_btn1 = [sg.Button("▶︎", size=(1,1), key="-r5_btn_01-")]
+        today = datetime.date.today()
+        r5_txt = [sg.Text(f"{today.year:04d}-{today.month:02d}", key="-r5_txt_00-")]
+        r5_upp = [r5_btn0 + r5_txt + r5_btn1]
 
-        r5 = [sg.Tab("tmp", [r5_tx1], key="r5")]
+        r5_low = [[sg.Text("Monthly Plan")]]
+        r5_low += [[sg.Multiline("", size=self.sizes["right_team_box"], enable_events=True, key="-r5_mul_00-")]]
+        r5_low += [[sg.Text("Weekly Plan")]]
+        s = (self.sizes["right_team_box"][0], self.sizes["right_team_box"][0]//8)
+        r5_low += [[sg.Multiline("", size=s, enable_events=True, key=f"-r5_mul_{i:02d}-")] for i in range(1, 5)]
+
+        r5 = [sg.Tab("Plan", r5_upp + r5_low, key="r5")]
         return r5
 
 

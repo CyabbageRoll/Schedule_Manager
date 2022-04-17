@@ -1,22 +1,25 @@
 schedule manager settings file,,,,,,,,,,,,,,,
-データの保管フォルダ。"name"という単語が含まれていないこと
-file_save_dir,./test
-window_theme,DarkGrey4
-header_nrow,4
-user_name,がんばる上司
-team_members,できる社員,すごい社員,がんばる上司
-hour_in_date,6
-daily_begin,7
-dailytable_rows,80
-dailytable_disp_rows,50
-font,Meiryo,10
-window, 1600,1000
-header_button,10,1
-header_chkbox,20,1
-header_radio,15,1
-right_button,10,1
-right_input,15,1
-right_comment_boxies,480,100
-right_team_box,480,500
-graph_top_right,10000,100
-left3_col_width,15,0
+"データの保管フォルダ。""--name--""という単語が含まれていないこと",,,,,,,,,,,,,,,
+file_save_dir,./test,,,,,,,,,,,,,,
+window_theme,DarkGrey4,,,,,,,,,,,,,,
+header_nrow,4,,,,,,,,,,,,,,
+user_name,がんばる上司,,,,,,,,,,,,,,
+team_members,できる社員 すごい社員 がんばる上司,,,,,,,,,,,,,,
+hour_in_date,6,,,,,,,,,,,,,,
+daily_begin,7,,,,,,,,,,,,,,
+dailytable_rows,80,,,,,,,,,,,,,,
+dailytable_disp_rows,50,,,,,,,,,,,,,,
+font,Meiryo,10.0,,,,,,,,,,,,,
+window, 1600,1000.0,,,,,,,,,,,,,
+header_button,10,1.0,,,,,,,,,,,,,
+header_chkbox,20,1.0,,,,,,,,,,,,,
+header_radio,15,1.0,,,,,,,,,,,,,
+right_button,10,1.0,,,,,,,,,,,,,
+right_input,15,1.0,,,,,,,,,,,,,
+right_comment_boxies,480,100.0,,,,,,,,,,,,,
+right_team_box,60,30.0,,,,,,,,,,,,,
+graph_top_right,10000,100.0,,,,,,,,,,,,,
+left3_col_width,15,0.0,,,,,,,,,,,,,
+r1_table_width,20,,,,,,,,,,,,,,
+r2_table_width,30,8.0,20.0,,,,,,,,,,,,
+auto_priority_activate,True,,,,,,,,,,,,,,

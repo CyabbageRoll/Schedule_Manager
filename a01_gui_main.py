@@ -30,8 +30,8 @@ sch_m.window.read(timeout=1)
 while True:
 
     event, pos, item, eid = sch_m.parse_event()
-    if event and "MV" not in event:
-        print(event, pos, item, eid)
+    # if event and "MV" not in event:
+    #     print(event, pos, item, eid)
 
     if event == sg.WIN_CLOSED: # if user closes window or clicks cancel
         break
@@ -85,11 +85,18 @@ while True:
 
     if pos == "l3":  # left tab2
         if item == "btn":
-            sch_m.l3_priority_updown_button_pressed(eid)
+            if eid < 4:
+                sch_m.l3_priority_updown_button_pressed(eid)
+            if eid == 4:
+                sch_m.l3_priority_auto_button_pressed()
         if "tbl" in item:
             sch_m.l3_table_selected_ticket_changed()
         continue
 
+    if pos == "l0":
+        if item == "btn":
+            if eid == 0:
+                sch_m.l0_settings_save_and_restart_button_pressed()
 
     # %% =======================================================================
     # right tab
@@ -100,10 +107,16 @@ while True:
                 if item[4:6] == "LC":
                     sch_m.r1_input_date_box_selected(eid)
             sch_m.r1_input_check()
+            # sch_m._r1_pre_next_ticket_table_update()
         if item[:3] == "btn":
             if eid == 0:
-                sch_m.r1_apply_buttom_pressed()
+                sch_m.r1_apply_button_pressed()
+            if eid == 1:
+                sch_m.r1_delete_button_pressed()
+        if item == "right_menu":
+            sch_m.r1_right_click_menu_clicked(event)
         continue
+
     if pos == "r2":  # right tab2
         if item == "btn":
             # if eid == 0:
@@ -119,11 +132,22 @@ while True:
                 sch_m.r2_information_box_inputed()
         continue
     if pos == "r3":  # right tab3
+        if item == "btn":
+            if eid == 0:
+                sch_m.r3_mail_button_pressed()
+            if eid == 1:
+                sch_m.r3_folder_button_pressed()
+            if eid == 2:
+                sch_m.r3_memo_button_pressed()
+            
         continue
     if pos == "r4":  # right tab4
         continue
     if pos == "r5":  # right tab5
-        continue
+        if item == "btn":
+            sch_m.r5_arrow_button_pressed(eid)
+        if item == "mul":
+            sch_m.r5_df_from_multiline(eid)
 
 sch_m.window.close()
 
