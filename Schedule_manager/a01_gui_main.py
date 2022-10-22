@@ -231,5 +231,11 @@ while True:
             sch_m.get_memo_items_from_r7()
         continue
 
+    if pos == "r8":
+        if item == "btn":
+            if eid == 0:
+                sch_m.display_info_in_r8_multi()
+        continue
+
 sch_m.window.close()
 

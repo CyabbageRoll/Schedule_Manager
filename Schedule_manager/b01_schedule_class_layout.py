@@ -201,8 +201,9 @@ class ScheduleManageLayout:
         r5 = self._r5_layout()
         r6 = self._r6_layout()
         r7 = self._r7_layout()
+        r8 = self._r8_layout()
 
-        rt = [sg.TabGroup([r1, r2, r3, r4, r5, r6, r7], size=(self.sizes.right_tab_group_w, self.sizes.right_tab_group_h), enable_events=True, key="-rt_grp_00-")]
+        rt = [sg.TabGroup([r1, r2, r3, r4, r5, r6, r7, r8], size=(self.sizes.right_tab_group_w, self.sizes.right_tab_group_h), enable_events=True, key="-rt_grp_00-")]
         return rt
 
 
@@ -356,6 +357,15 @@ class ScheduleManageLayout:
         r7_mul = [sg.Multiline("", size=s, key="-r7_mul_00-", enable_events=True)]
         r7 = [sg.Tab("Memo", [r7_mul], key = "-r7")] 
         return r7
+
+    def _r8_layout(self):
+        
+        r8_btn0 = [sg.Button("log", size=(self.sizes.right_button_w, self.sizes.right_button_h), key="-r8_btn_00-")]
+        s = (self.sizes.right_team_box_w * 2, self.sizes.right_team_box_h * 2)
+        r8_mul = [sg.Text("", size=s, key="-r8_txt_00-", enable_events=True)]
+        r8 = [sg.Tab("log", [r8_btn0, r8_mul], key = "-r8")] 
+        return r8
+
 
     # %% =======================================================================
     # other

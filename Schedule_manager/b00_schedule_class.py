@@ -6,6 +6,7 @@ import os
 import bisect
 import hashlib
 import datetime
+from collections import defaultdict
 from heapq import heapify, heappush, heappop
 
 # pip or conda install
@@ -1830,6 +1831,72 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
     def display_memo_item_in_r7_multi(self):
         self.values["-r7_mul_00-"] = self.personal_memo["memo"]
         self.window["-r7_mul_00-"].update(self.personal_memo["memo"])
+
+
+    # r８ =======================================================================
+    def display_info_in_r8_multi(self):
+        info = self.create_r8_information()
+        self.values["-r8_txt_00-"] = info
+        self.window["-r8_txt_00-"].update(info)
+
+    def create_r8_information(self):
+        info = []
+        info.append(self.window["-r2_txt_02-"].get())
+        info.append(r" Begin   ~    End    (Total)   <Break>")
+        info.append(self.window["-r2_txt_03-"].get()[5:])
+        info.append("")
+        info.append(self.aggregated_daily_project_hours())
+        
+        return "\n".join(info)
+
+    def aggregated_daily_project_hours(self):
+
+        date = self.window["-r2_txt_02-"].get()
+        name = self.params.user_name
+        sch_user = self.sch_dfs[name][date].tolist()[:24*4]
+
+        # aggregate hour as per index
+        work_hour = defaultdict(float)
+        for idx in sch_user:
+            if idx:
+                work_hour[idx] += 0.25
+
+        # create keys
+        for idx, hour in work_hour.items(): 
+            prj1 = f"{self.prj_dfs[name].loc[idx, 'Project1']:<15s} | "
+            prj2 = prj1 + f"{self.prj_dfs[name].loc[idx, 'Project2']:<15s} | "
+            task = prj2 + f"{self.prj_dfs[name].loc[idx, 'Task']:<15s} | "
+            tick = task + f"{self.prj_dfs[name].loc[idx, 'Ticket']:<15s} | "
+            work_hour[idx] = [[prj1, prj2, task, tick], hour]
+
+        # aggregate hour as per prj1, 2, task, ticket
+        prj1_hour = defaultdict(float)
+        prj2_hour = defaultdict(float)
+        task_hour = defaultdict(float)
+        tick_hour = defaultdict(float)
+        for k, hour in work_hour.values():
+            prj1_hour[k[0]] += hour
+            prj2_hour[k[1]] += hour
+            task_hour[k[2]] += hour
+            tick_hour[k[3]] += hour
+
+        prj_hours = []
+        prj_hours.append("## hours as per project1")
+        prj_hours.extend(f"  {k:<10s}  {v}" for k, v in prj1_hour.items())
+        prj_hours.append("")
+        prj_hours.append("## hours as per project2")
+        prj_hours.extend(f"  {k:<10s}  {v}" for k, v in prj2_hour.items())
+        prj_hours.append("")
+        prj_hours.append("## hours as per task")
+        prj_hours.extend(f"  {k:<10s}  {v}" for k, v in task_hour.items())
+        prj_hours.append("")
+        prj_hours.append("## hours as per ticket")
+        prj_hours.extend(f"  {k:<10s}  {v}" for k, v in tick_hour.items())
+
+        return "\n".join(prj_hours)
+
+
+
 
 
 # ==========================================================================
