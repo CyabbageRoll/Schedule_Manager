@@ -157,7 +157,7 @@ class SortTickets:
         """counting business days
            include begin date, exclude due date
            ex) form 1/1(Fri) to 1/6(Wed) -> 1/1, 1/4, 1/5 are business date 
-               retunr is 3
+               return is 3
 
         Args:
             begin (datetime.date): begin date
