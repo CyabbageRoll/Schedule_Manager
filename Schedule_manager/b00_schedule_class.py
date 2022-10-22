@@ -6,8 +6,8 @@ import os
 import bisect
 import hashlib
 import datetime
-from collections import defaultdict
 from heapq import heapify, heappush, heappop
+from collections import defaultdict 
 
 # pip or conda install
 import pandas as pd
@@ -43,7 +43,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         self.values = None
         self._initialize() 
         self.app_schedule = [""] * self.params.daily_table_rows
-
+        self.task_updating_df = self.prj_dfs[self.params.user_name].iloc[:1]
 
     def _initialize(self):
 
@@ -1674,7 +1674,6 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
 
     def table_items_into_multiline_r6(self):
         txt = ""
-        # FIXME : いきなりボタンを押すとself.task_updating_dfが存在しないので落ちる
         for idx in self.task_updating_df.index:
             single_line = self.task_updating_df.loc[idx, ["Ticket", "Estimation", "Ready_date", "Due_date"]].values.tolist()
             single_line = [s if s else "-" for s in single_line]
@@ -1795,7 +1794,21 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         # update prev- and next- tickets as per table order, because total priority is defined as per those.
         prev_idx = None
         ids = self.task_updating_df.index
-        for idx in self.task_updating_df.index:
+
+        new_ids = []
+        for idx in ids:
+            if idx not in self.prj_dfs[self.params.user_name].index:
+                new_ids.append(idx)
+        if not len(new_ids):
+            return
+
+        msg = f"Update {self.task_updating_df.loc[ids[0], 'Project1']} - {self.task_updating_df.loc[ids[0], 'Project2']} - {self.task_updating_df.loc[ids[0], 'Task']}\n"
+        for idx in new_ids:
+            msg += f"{self.task_updating_df.loc[idx, 'Ticket']} \n"
+        if sg.popup_ok_cancel(msg) != "OK":
+            return
+
+        for idx in ids:
             # ticket in this task is disused but remain ticket of other task
             # previous
             prev_tickets = self.task_updating_df.loc[idx, "Prev_task"].split(",")

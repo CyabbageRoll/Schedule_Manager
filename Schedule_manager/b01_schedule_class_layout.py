@@ -328,8 +328,8 @@ class ScheduleManageLayout:
 
     def _r6_layout(self):
 
-        btn_list1 = ["Apply", "Get Tickets"]
-        btn_list2 = ["🔼", "🔽", "Pull", "Push"]
+        btn_list1 = ["Push", "Pull"]
+        btn_list2 = ["🔼", "🔽", "Edit", "Add"]
         r6_btn1 = [sg.Button(name, key=f"-r6_btn1_{i:02d}-", size=(self.sizes.right_button_w, self.sizes.right_button_h)) for i, name in enumerate(btn_list1)]
         r6_btn2 = [sg.Button(name, key=f"-r6_btn2_{i:02d}-", size=(self.sizes.right_button_w, self.sizes.right_button_h)) for i, name in enumerate(btn_list2)]
 
