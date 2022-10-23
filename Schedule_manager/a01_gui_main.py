@@ -29,7 +29,7 @@ sch_m.window.read(timeout=1)
 last_update_time = datetime.datetime.now()
 while True:
 
-    # if datetime.datetime.now() - last_update_time > datetime.timedelta(seconds=60*5): # TODO : settingで設定できるように
+    # if datetime.datetime.now() - last_update_time > datetime.timedelta(seconds=60*5): # TODO : set in json file
     #     last_update_time = datetime.datetime.now()
     #     try:
     #         sch_m.save_files()

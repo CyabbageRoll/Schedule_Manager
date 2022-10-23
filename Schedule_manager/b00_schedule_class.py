@@ -6,8 +6,8 @@ import os
 import bisect
 import hashlib
 import datetime
-from heapq import heapify, heappush, heappop
 from collections import defaultdict 
+from heapq import heapify, heappush, heappop
 
 # pip or conda install
 import pandas as pd
@@ -124,7 +124,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
             if event is l1 or l3 right click menu
                 return event, "l1", "grp-RC", ticket id
         """
-        event, self.values = self.window.read(timeout=1000*60*10) # TODO : settingで設定できるように
+        event, self.values = self.window.read(timeout=1000*60*10) # TODO : set in json file
 
         if not event:
             return event, None, None, 0
@@ -250,14 +250,6 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         self.previous_selected_ticket = ticket_id
         if self.values["-r1_cbx_00-"]:
             return
-
-        """
-        # XXX : bind error ?
-        File "a01_gui_main.py", line 86, in <module>
-        ticket_id = sch_m.get_and_remain_mouse_on_ticket_id(eid)
-        self.mouse_x = int(self.l1_grp[eid].user_bind_event.x / self.sizes.left_tab1_canvas_w * self.sizes.graph_top_right_h)
-        AttributeError: 'NoneType' object has no attribute 'x'
-        """
 
         return ticket_id
 
@@ -413,8 +405,8 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
 
     # l3 =======================================================================
     def update_priority_as_per_button_pressed(self, eid):
-        # TODO : これは機能を消す
         """
+        WARNING!! currently auto priority function is used. This function is not used.
         priority of selected ticket is changed depending on the button. 
         And update table
         Args:
@@ -1983,7 +1975,6 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         """
         ticket id is generated with hash function from project1, 2, task, ticket and in charge
         """
-        # TODO : 日付も加えて同じ名前のチケットも作れるようにする
         item_ids = [i for i, title in enumerate(titles) if title in self.params.hash_item]
         x = "-".join([item[i] for i in item_ids] + [datetime.datetime.now().strftime(r"%S%f")])
         return hashlib.md5(x.encode()).hexdigest()
