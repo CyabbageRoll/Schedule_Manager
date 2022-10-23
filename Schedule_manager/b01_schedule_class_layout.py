@@ -388,3 +388,7 @@ class ScheduleManageLayout:
 
         self.window.bind("<Control-s>", "Cs-")
         self.window.bind("<Control-r>", "Cr-")
+
+        self.window["-r2_tbl_00-"].bind("<Button1-Motion>", "DR-")
+        self.window["-r2_tbl_00-"].bind("<ButtonPress>", "BP-")
+        self.window["-r2_tbl_00-"].bind("<ButtonRelease>", "BR-")

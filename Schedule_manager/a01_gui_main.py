@@ -41,8 +41,8 @@ while True:
     #         pass
 
     event, pos, item, eid = sch_m.parse_event()
-    # if event and "MV" not in event:
-    #     print(event, pos, item, eid)
+    if event and "MV" not in event:
+        print(event, pos, item, eid)
 
     if event == sg.WIN_CLOSED: # if user closes window or clicks cancel
         break
@@ -189,6 +189,12 @@ while True:
             sch_m.display_team_box()
         if item == "right_menu":
             sch_m.set_daily_row_as_per_right_click(eid)
+        if item == "tbl-DR":
+            sch_m.select_r2_table_rows_with_mouse_drag()
+        # if item == "tbl-BP":
+        #     sch_m.select_r2_table_rows_with_mouse_click()
+        if item == "tbl-BR":
+            sch_m.r2_table_start_release()
         continue
 
     if pos == "r3":  # right tab3 -team

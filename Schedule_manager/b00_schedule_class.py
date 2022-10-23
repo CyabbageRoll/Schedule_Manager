@@ -44,6 +44,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         self._initialize() 
         self.app_schedule = [""] * self.params.daily_table_rows
         self.task_updating_df = self.prj_dfs[self.params.user_name].iloc[:1]
+        self.r2_table_click_start = []
 
     def _initialize(self):
 
@@ -1522,6 +1523,32 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
             self.r2_daily_schedule_update()
         self.update_tabs()
         return
+
+    def select_r2_table_rows_with_mouse_click(self):
+        self.r2_table_click_start = self.values["-r2_tbl_00-"]
+        print(self.r2_table_click_start)
+
+    def select_r2_table_rows_with_mouse_drag(self):
+        row = self.window["-r2_tbl_00-"].user_bind_event.y // self.sizes.tbl_row_hight
+        row = max(row, 1)
+        row = min(row, self.params.daily_table_rows-2)
+        
+        if not self.r2_table_click_start:
+            self.r2_table_click_start = [row]
+        row_s = self.r2_table_click_start[0]
+        if row_s > row:
+            row_s, row = row, row_s
+
+        select_rows = [i for i in range(row_s-1, row)]
+        self.window["-r2_tbl_00-"].update(select_rows=select_rows)
+
+        # print(self.window["-r2_tbl_00-"].Widget.yview_scroll.)
+        # aa = vars(self.window["-r2_tbl_00-"].Widget.yview_scroll)
+        # print(aa)
+        # print(self.window["-r2_tbl_00-"].Widget.yview_scroll.__get__(0))
+
+    def r2_table_start_release(self):
+        self.r2_table_click_start = []
 
 
     # r3 =======================================================================
