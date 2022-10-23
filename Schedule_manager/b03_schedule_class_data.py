@@ -38,7 +38,7 @@ class SettingParameters:
     hash_item : List[str] = field(
         default_factory=lambda:["Project1", "Project2", "Task", "Ticket", "In_charge"])
     priority_list : List[str] = field(
-        default_factory=lambda:["Project1", "Project2", "Task", "Ticket", "In_charge", "Ready_date", "Due_date", "Status", "Update_Estimation", "End_date_reg", "Man_hour_reg", "Priority"])
+        default_factory=lambda:["Project1", "Project2", "Task", "Ticket", "In_charge", "Ready_date", "Due_date", "Status", "Update_Estimation", "End_date_reg", "Man_hour_reg", "Priority", "Index"])
     schedule_add_info : List[str] = field(
         default_factory=lambda:["Hour", "Health", "Safety", "Reasons_overwork", "Information", "Memo1", "Memo2", "Memo3"])
     status : List[str] = field(

@@ -114,7 +114,7 @@ while True:
                 sch_m.update_priority_as_per_button_pressed(eid)
             if eid == 4:
                 sch_m.calculate_priority()
-                sch_m.update_l3_table()
+                sch_m.display_l3_table_as_multiline_command()
             if eid == 20:
                 sch_m.display_l3_table_as_multiline_command()
         if "tbl" in item:

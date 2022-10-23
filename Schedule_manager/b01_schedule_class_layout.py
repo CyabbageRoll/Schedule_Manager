@@ -123,7 +123,7 @@ class ScheduleManageLayout:
 
         grp_r_click_menu = ["menu", ["Scheduling_", "Edit_"] + [f"{s}_" for s in self.params.status]]
         tbl_tmp = [""] * len(self.params.priority_list)
-        l3_tbl = [sg.Table(tbl_tmp, headings=self.params.priority_list, auto_size_columns=False, def_col_width=self.sizes.left3_col_width_w, row_height=self.sizes.tbl_row_hight, num_rows=70, vertical_scroll_only=True, justification="center", enable_events=True, right_click_menu=grp_r_click_menu, text_color=self.theme.text_table, background_color=self.theme.table_background, key="-l3_tbl_00-")]
+        l3_tbl = [sg.Table(tbl_tmp, headings=self.params.priority_list, auto_size_columns=False, def_col_width=self.sizes.left3_col_width_w, row_height=self.sizes.tbl_row_hight, num_rows=70, vertical_scroll_only=False, justification="center", enable_events=True, right_click_menu=grp_r_click_menu, text_color=self.theme.text_table, background_color=self.theme.table_background, key="-l3_tbl_00-")]
 
         # button
         btn_list = ["⏫", "🔼", "🔽", "⏬", "🖥"]

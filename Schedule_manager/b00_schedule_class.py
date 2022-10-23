@@ -94,13 +94,8 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
     def update_tabs(self):
 
         self._priority_update()
-        l3_tbl_df = self.prj_dfs[self.params.user_name][self.params.priority_list]
-        self.window["-l3_tbl_00-"].update(values=l3_tbl_df.values.tolist())
-        
         if self.values["-l3_cbx_20-"]:
             self.calculate_priority()
-        
-        # self.update_l3_table()
         self.l1_chart_draw()
         self.set_right_click_menu_of_prj12_task()
         self.r2_daily_schedule_update()
@@ -421,12 +416,13 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         steps = [-10, -1, 2, 11]
         step = max(1, current_pri + steps[eid]) - current_pri
         self._priority_update(ticket_id=ticket_id, step=step)
-        self.update_l3_table(ticket_id)
+        self.display_l3_table_as_multiline_command(ticket_id)
 
         return
 
 
     def update_l3_table(self, ticket_id=None):
+        # currently not used. display_l3_table_as_multiline_command is used.
         name = self._get_activated_member()
         l3_tbl_df = self.prj_dfs[name][self.params.priority_list]
         row = self.prj_dfs[name].index.get_loc(ticket_id) if ticket_id else 0
@@ -469,7 +465,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
     def get_selected_ticket_id_in_table(self):
         if not self.values["-l3_tbl_00-"]:
             return None
-        indices = [self.prj_dfs[self.params.user_name].index.values[row] for row in self.values["-l3_tbl_00-"]]
+        indices = [self.l3_tbl_df.index.values[row] for row in self.values["-l3_tbl_00-"]]
         ticket_id = indices[0]
         return ticket_id
 
@@ -487,13 +483,13 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
             # print(df.loc[tid, "Task"], df.loc[tid, "Ticket"], i)
 
         self._priority_update()
-        # self.update_l3_table()
 
 
-    def display_l3_table_as_multiline_command(self):
+    def display_l3_table_as_multiline_command(self, ticket_id=None):
 
         name = self._get_activated_member()
-        l3_tbl_df = self.prj_dfs[name][self.params.priority_list]
+        self.l3_tbl_df = self.prj_dfs[name][self.params.priority_list[:-1]].copy()
+        self.l3_tbl_df["Index"] = self.l3_tbl_df.index
         query_arg = self.window["-l3_inp_00-"].get()
         sort_arg = self.window["-l3_inp_01-"].get()
         sort_arg = sort_arg.replace("'", "").replace('"', "")
@@ -505,16 +501,29 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
 
         if query_arg:
             try:
-                l3_tbl_df = l3_tbl_df.query(query_arg)
+                self.l3_tbl_df = self.l3_tbl_df.query(query_arg)
             except Exception as e:
                 self.window["-l3_txt_00-"].update(e, background_color=self.theme.alert)
         if sort_arg[0]:
             try:
-                l3_tbl_df = l3_tbl_df.sort_values(sort_arg)
+                self.l3_tbl_df = self.l3_tbl_df.sort_values(sort_arg)
             except Exception as e:
                 self.window["-l3_txt_01-"].update(e, background_color=self.theme.alert)
 
-        self.window["-l3_tbl_00-"].update(values=l3_tbl_df.values.tolist())
+        table_colors = [[] for _ in range(self.l3_tbl_df.shape[0])]
+        for i, tid in enumerate(self.l3_tbl_df.index.values.tolist()):
+            if self.l3_tbl_df.loc[tid, "Status"] == "Done":
+                table_colors[i] = [i, self.theme.table_ticket_done]
+            elif self.l3_tbl_df.loc[tid, "Status"] == "Often":
+                table_colors[i] = [i, self.theme.table_ticket_often]
+            else:
+                table_colors[i] = [i, self.theme.table_ticket_other]
+
+        row = 0
+        if ticket_id and ticket_id in self.l3_tbl_df.index:
+            row = self.l3_tbl_df.index.get_loc(ticket_id)
+
+        self.window["-l3_tbl_00-"].update(values=self.l3_tbl_df.values.tolist(), select_rows=[row], row_colors=table_colors)
 
         return
 
