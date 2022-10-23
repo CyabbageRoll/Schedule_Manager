@@ -53,15 +53,17 @@ class ScheduleManageIO:
         return None
 
 
-    def save_files(self):
+    def save_files(self, popup=True):
         """save prj, sch, trk dataframe(s) at user specified location"""
         self._save_prj_file()
         self._save_daily_schedule_file()
         self._save_man_hour_tracker_file()
         self._save_monthly_plan_file()
         self._save_personal_memo()
+        if popup:
+            sg.popup_no_buttons("Saved", auto_close=True, auto_close_duration=0.5)
 
-    def reload_files(self):
+    def reload_files(self, popup=True):
         """read prj, sch, trk dataframe(s) from user specified location"""
         self._read_prj_file()
         self._read_daily_schedule_file()
@@ -69,6 +71,8 @@ class ScheduleManageIO:
         self._read_monthly_plan_file()
         self.read_order()
         self.read_personal_memo()
+        if popup:
+            sg.popup_no_buttons("Loaded", auto_close=True, auto_close_duration=0.5)
 
 
     def save_settings_and_restart_app(self):

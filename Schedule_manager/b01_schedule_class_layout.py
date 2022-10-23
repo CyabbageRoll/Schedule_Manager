@@ -123,7 +123,7 @@ class ScheduleManageLayout:
 
         grp_r_click_menu = ["menu", ["Scheduling_", "Edit_"] + [f"{s}_" for s in self.params.status]]
         tbl_tmp = [""] * len(self.params.priority_list)
-        l3_tbl = [sg.Table(tbl_tmp, headings=self.params.priority_list, auto_size_columns=False, def_col_width=self.sizes.left3_col_width_w, row_height=self.sizes.tbl_row_hight, num_rows=70, vertical_scroll_only=True, justification="center", enable_events=True, right_click_menu=grp_r_click_menu, text_color=self.theme.text_table, background_color=self.theme.table_background, key="-l3_tbl_00-")]
+        l3_tbl = [sg.Table(tbl_tmp, headings=self.params.priority_list, auto_size_columns=False, def_col_width=self.sizes.left3_col_width_w, row_height=self.sizes.tbl_row_hight, num_rows=70, vertical_scroll_only=False, justification="center", enable_events=True, right_click_menu=grp_r_click_menu, text_color=self.theme.text_table, background_color=self.theme.table_background, key="-l3_tbl_00-")]
 
         # button
         btn_list = ["⏫", "🔼", "🔽", "⏬", "🖥"]
@@ -181,7 +181,6 @@ class ScheduleManageLayout:
         for setting, input_type in zip(self.SETTINGS_SIZE, self.SETTINGS_SIZE_TYPE):
             l0_SET.append([sg.Text(setting, size=(self.sizes.header_chk_box_w, self.sizes.header_chk_box_h))] + [sg.Input(self.df_settings.loc[setting, i+1], key=f"-{setting}_{i:02d}-", size=(self.sizes.right_input_w, self.sizes.right_input_h)) for i, _ in enumerate(input_type)])
 
-        # TODO : いくつかの拡張をつける
         l0 = [sg.Tab("Settings", [l0_tx1, l0_btn] + l0_SET)]
         return l0
 
@@ -201,8 +200,9 @@ class ScheduleManageLayout:
         r5 = self._r5_layout()
         r6 = self._r6_layout()
         r7 = self._r7_layout()
+        r8 = self._r8_layout()
 
-        rt = [sg.TabGroup([r1, r2, r3, r4, r5, r6, r7], size=(self.sizes.right_tab_group_w, self.sizes.right_tab_group_h), enable_events=True, key="-rt_grp_00-")]
+        rt = [sg.TabGroup([r1, r2, r3, r4, r5, r6, r7, r8], size=(self.sizes.right_tab_group_w, self.sizes.right_tab_group_h), enable_events=True, key="-rt_grp_00-")]
         return rt
 
 
@@ -254,7 +254,7 @@ class ScheduleManageLayout:
         r1_clm3 = [sg.Column([r1_txt3, r1_tbl3])]
         r1_clm1 = [sg.Column([r1_clm2 + r1_txt1 + r1_clm3])]
 
-        # TODO : size設定
+        # TODO : size setting
         r1_txt4 = [sg.Text("", key="-r1_txt_04-")]
 
         r1 = [sg.Tab("planing", [r1_clm, r1_clm1, r1_txt4], key="r1")]
@@ -327,8 +327,8 @@ class ScheduleManageLayout:
 
     def _r6_layout(self):
 
-        btn_list1 = ["Apply", "Get Tickets"]
-        btn_list2 = ["🔼", "🔽", "Pull", "Push"]
+        btn_list1 = ["Push", "Pull"]
+        btn_list2 = ["🔼", "🔽", "Edit", "Add"]
         r6_btn1 = [sg.Button(name, key=f"-r6_btn1_{i:02d}-", size=(self.sizes.right_button_w, self.sizes.right_button_h)) for i, name in enumerate(btn_list1)]
         r6_btn2 = [sg.Button(name, key=f"-r6_btn2_{i:02d}-", size=(self.sizes.right_button_w, self.sizes.right_button_h)) for i, name in enumerate(btn_list2)]
 
@@ -336,7 +336,6 @@ class ScheduleManageLayout:
         r6_txt = [sg.Text(t, size=(self.sizes.right_input_w, self.sizes.right_input_h), justification="left", pad=0) for t in txt_list]
         self.r6_inp = [sg.Input("", size=(self.sizes.right_input_w, self.sizes.right_input_h), pad=0, key=f"-r6_inp_{i:02d}-", enable_events=True) for i in range(3)]
 
-        # TODO : １つのタスクに作れるチケットは100個までの制約を入れる
         tbl_tmp = [["", "", "", "", ""]] * 100
         tbl_headings = ["Ticket", "Estimation", "Record", "Ready Date", "Due Date"]
         r6_tbl = [sg.Table(tbl_tmp, headings=tbl_headings, auto_size_columns=False, col_widths=[16,8,8,12,12], row_height=self.sizes.tbl_row_hight, num_rows=20, justification="center", enable_events=False, text_color=self.theme.text_table, background_color=self.theme.table_background, key="-r6_tbl_00-")]
@@ -356,6 +355,15 @@ class ScheduleManageLayout:
         r7_mul = [sg.Multiline("", size=s, key="-r7_mul_00-", enable_events=True)]
         r7 = [sg.Tab("Memo", [r7_mul], key = "-r7")] 
         return r7
+
+    def _r8_layout(self):
+        
+        r8_btn0 = [sg.Button("log", size=(self.sizes.right_button_w, self.sizes.right_button_h), key="-r8_btn_00-")]
+        s = (self.sizes.right_team_box_w * 2, self.sizes.right_team_box_h * 2)
+        r8_mul = [sg.Text("", size=s, key="-r8_txt_00-", enable_events=True)]
+        r8 = [sg.Tab("log", [r8_btn0, r8_mul], key = "-r8")] 
+        return r8
+
 
     # %% =======================================================================
     # other
@@ -378,3 +386,5 @@ class ScheduleManageLayout:
             if i in [4,5]:
                 inp.bind("<ButtonPress>", "LC-")
 
+        self.window.bind("<Control-s>", "Cs-")
+        self.window.bind("<Control-r>", "Cr-")
