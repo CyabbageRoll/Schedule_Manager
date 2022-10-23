@@ -51,7 +51,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         if warning_msg:
             sg.popup_ok(warning_msg)
         
-        self.reload_files()
+        self.reload_files(popup=False)
 
     def create_original_sg_theme(self):
 

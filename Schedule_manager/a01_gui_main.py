@@ -47,6 +47,12 @@ while True:
     if event == sg.WIN_CLOSED: # if user closes window or clicks cancel
         break
 
+    if event == "Cs-":
+        sch_m.save_files()
+    if event == "Cr-":
+        sch_m.reload_files()
+        sch_m.update_tabs()
+
     # %% =======================================================================
     # header
     #===========================================================================

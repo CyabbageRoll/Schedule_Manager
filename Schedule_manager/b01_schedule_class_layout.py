@@ -386,3 +386,5 @@ class ScheduleManageLayout:
             if i in [4,5]:
                 inp.bind("<ButtonPress>", "LC-")
 
+        self.window.bind("<Control-s>", "Cs-")
+        self.window.bind("<Control-r>", "Cr-")
