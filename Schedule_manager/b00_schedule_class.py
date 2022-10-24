@@ -322,11 +322,11 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         txt = [d.strftime("%m/%d(%a)") for d in l1_calendar if d.weekday() < 5]
         self.l1_grp_cal.erase()
         for i, t in enumerate(txt):
-            self.l1_grp_cal.draw_text(t, (50+i*100, 50), color=self.theme.graph_text, font=(self.params.font, self.params.font_size))
-            self.l1_grp_cal.draw_line((i*100, 0), (i*100, 100), color=self.theme.graph_line, width=1)
+            self.l1_grp_cal.draw_text(t, (50+i*100, 50), color=self.theme.text, font=(self.params.font, self.params.font_size))
+            self.l1_grp_cal.draw_line((i*100, 0), (i*100, 100), color=self.theme.text, width=1)
         left_edge = self.sizes.graph_top_right_w
-        self.l1_grp_cal2.draw_text("tickets", (left_edge // 2, 50), color=self.theme.graph_text, font=(self.params.font, self.params.font_size))
-        self.l1_grp_cal2.draw_line((left_edge, 0), (left_edge, 100), color=self.theme.graph_line, width=1)
+        self.l1_grp_cal2.draw_text("tickets", (left_edge // 2, 50), color=self.theme.text, font=(self.params.font, self.params.font_size))
+        self.l1_grp_cal2.draw_line((left_edge, 0), (left_edge, 100), color=self.theme.text, width=1)
 
         # ticket id and position list. these are used to know which ticket mouse cursor is on
         self.graph_positions_todo = [[0] for i in range(len(self.prj))]
