@@ -1886,7 +1886,11 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         info.append(r" Begin   ~    End    (Total)   <Break>")
         info.append(self.window["-r2_txt_03-"].get()[5:])
         info.append("")
-        info.append(self.aggregated_daily_project_hours())
+        aggregate_hours = self.aggregated_daily_project_hours()
+        name = ["Project1", "Project2", "Task", "Ticket"]
+        for hours_dict, name in zip(aggregate_hours, name):
+            info.append(f"◆ hours as per {name}")
+            info.append(self.to_str_list_aggregated_hours(hours_dict))
         
         return "\n".join(info)
 
@@ -1921,22 +1925,24 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
             task_hour[k[2]] += hour
             tick_hour[k[3]] += hour
 
-        prj_hours = []
-        prj_hours.append("## hours as per project1")
-        prj_hours.extend(f"  {k:<10s}  {v}" for k, v in prj1_hour.items())
-        prj_hours.append("")
-        prj_hours.append("## hours as per project2")
-        prj_hours.extend(f"  {k:<10s}  {v}" for k, v in prj2_hour.items())
-        prj_hours.append("")
-        prj_hours.append("## hours as per task")
-        prj_hours.extend(f"  {k:<10s}  {v}" for k, v in task_hour.items())
-        prj_hours.append("")
-        prj_hours.append("## hours as per ticket")
-        prj_hours.extend(f"  {k:<10s}  {v}" for k, v in tick_hour.items())
+        return prj1_hour, prj2_hour, task_hour, tick_hour
 
+
+    def to_str_list_aggregated_hours(self, hours_dict):
+        prj_hours = []
+        prj_hours.extend(f"  {k:<10s}  {v}" for k, v in hours_dict.items())
+        prj_hours.append("")
         return "\n".join(prj_hours)
 
 
+    def log_button_1(self):
+        return
+
+    def log_button_2(self):
+        return
+
+    def log_button_3(self):
+        return
 
 
 

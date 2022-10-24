@@ -41,8 +41,8 @@ while True:
     #         pass
 
     event, pos, item, eid = sch_m.parse_event()
-    if event and "MV" not in event:
-        print(event, pos, item, eid)
+    # if event and "MV" not in event:
+    #     print(event, pos, item, eid)
 
     if event == sg.WIN_CLOSED: # if user closes window or clicks cancel
         break
@@ -247,6 +247,12 @@ while True:
         if item == "btn":
             if eid == 0:
                 sch_m.display_info_in_r8_multi()
+            if eid == 1:
+                sch_m.log_button_1()
+            if eid == 2:
+                sch_m.log_button_2()
+            if eid == 3:
+                sch_m.log_button_3()
         continue
 
 sch_m.window.close()

@@ -358,10 +358,13 @@ class ScheduleManageLayout:
 
     def _r8_layout(self):
         
-        r8_btn0 = [sg.Button("log", size=(self.sizes.right_button_w, self.sizes.right_button_h), key="-r8_btn_00-")]
+        r8_btn0 = [sg.Button("log0", size=(self.sizes.right_button_w, self.sizes.right_button_h), key="-r8_btn_00-")]
+        r8_btn1 = [sg.Button("log1", size=(self.sizes.right_button_w, self.sizes.right_button_h), key="-r8_btn_01-")]
+        r8_btn2 = [sg.Button("log2", size=(self.sizes.right_button_w, self.sizes.right_button_h), key="-r8_btn_02-")]
+        r8_btn3 = [sg.Button("log3", size=(self.sizes.right_button_w, self.sizes.right_button_h), key="-r8_btn_03-")]
         s = (self.sizes.right_team_box_w * 2, self.sizes.right_team_box_h * 2)
-        r8_mul = [sg.Text("", size=s, key="-r8_txt_00-", enable_events=True)]
-        r8 = [sg.Tab("log", [r8_btn0, r8_mul], key = "-r8")] 
+        r8_txt = [sg.Text("", size=s, key="-r8_txt_00-", enable_events=True)]
+        r8 = [sg.Tab("log", [r8_btn0 + r8_btn1 + r8_btn2 + r8_btn3, r8_txt], key = "-r8")] 
         return r8
 
 
