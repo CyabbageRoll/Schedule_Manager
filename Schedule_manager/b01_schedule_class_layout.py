@@ -273,14 +273,14 @@ class ScheduleManageLayout:
         tbl_tmp = [["", "", ""]] * self.params.daily_table_rows
         tbl_headings = ["Daily Schedule","time","Outlook"]
         r2_table_width = [self.sizes.r2_table_width_1, self.sizes.r2_table_width_2, self.sizes.r2_table_width_3]
-        r2_tbl = [sg.Table(tbl_tmp, headings=tbl_headings, auto_size_columns=False, col_widths=r2_table_width, row_height=self.sizes.tbl_row_hight, num_rows=self.params.daily_table_display_rows, justification="center", enable_events=False, text_color=self.theme.text_table, background_color=self.theme.table_background, key="-r2_tbl_00-")]
-
+        r2_tbl = [sg.Table(tbl_tmp, headings=tbl_headings, auto_size_columns=False, col_widths=r2_table_width, row_height=self.sizes.tbl_row_hight, justification="center", enable_events=False, text_color=self.theme.text_table, num_rows=self.params.daily_table_rows, vertical_scroll_only=True, hide_vertical_scroll=True, background_color=self.theme.table_background, expand_y=True, key="-r2_tbl_00-")]
+        r2_col1 = [sg.Column([r2_tbl], scrollable=True, vertical_scroll_only=True, size=(self.sizes.right_comment_boxes_w, self.sizes.right_comment_boxes_h*6))]
         r2_cbx = [sg.Checkbox(text="activate left click", default=False, p=0, key="-r2_cbx_00-")]
 
         r2_inp = [[sg.Text(t, size=(self.sizes.right_input_w, self.sizes.right_input_h), p=0, justification="left"), sg.Input("", size=(self.sizes.right_input_w * 4, self.sizes.right_input_h), p=0, enable_events=True, key=f"-r2_inp_{i:02d}-")] for i, t in enumerate(self.params.schedule_add_info[1:])]
         r2_col2 = [sg.Column(r2_inp, scrollable=True, size=(self.sizes.right_comment_boxes_w, self.sizes.right_comment_boxes_h), vertical_scroll_only=True)]
 
-        r2 = [sg.Tab("Daily", [r2_txt1, r2_txt2, r2_btn1+r2_btn[1:4], r2_tbl, r2_btn[4:]+r2_cbx, r2_col2], key="r2")]
+        r2 = [sg.Tab("Daily", [r2_txt1, r2_txt2, r2_btn1+r2_btn[1:4], r2_col1, r2_btn[4:]+r2_cbx, r2_col2], key="r2")]
         return r2
 
 
