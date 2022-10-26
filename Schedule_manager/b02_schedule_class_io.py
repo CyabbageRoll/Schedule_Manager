@@ -73,7 +73,11 @@ class ScheduleManageIO:
         self.read_personal_memo()
         if popup:
             sg.popup_no_buttons("Loaded", auto_close=True, auto_close_duration=0.5)
-
+        if not self.is_every_prj_in_checkbox():
+            sg.popup_no_buttons("restart window due to updating header checkboxes", auto_close=True, auto_close_duration=1)
+            self.window.close()
+            self.create_window()
+    
 
     def save_settings_and_restart_app(self):
         # TODO : Need to be update setting tab and button

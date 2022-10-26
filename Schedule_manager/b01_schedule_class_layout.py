@@ -43,6 +43,7 @@ class ScheduleManageLayout:
     def _header_layout(self):
 
         # project check box
+        self.hd_cbx_names = [p for p in self.prj]
         cbx_list = [[name, True, f"-hd_cbx_{i:02d}-"] for i, name in enumerate(self.prj)]
         self.hd_cbx = [sg.Checkbox(text=name, default=tf, key=key, size=(self.sizes.header_chk_box_w, self.sizes.header_chk_box_h), p=0, enable_events=True) for name, tf, key in cbx_list]
 

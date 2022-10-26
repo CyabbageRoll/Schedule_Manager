@@ -38,6 +38,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         self.sizes = {}
         self.params = {}
         self.colors = {}
+        self.hd_cbx_names = []
         self.personal_memo = {"follow" : [], "memo" : ""}
         self.previous_selected_ticket = None
         self.values = None
@@ -148,6 +149,15 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
 
         return event, pos, item, eid
 
+
+    def is_every_prj_in_checkbox(self):
+        if len(self.hd_cbx_names) < 1:
+            return True
+        for prj in self.prj:
+            if prj in self.hd_cbx_names:
+                continue
+            return False
+        return True
 
 # ==========================================================================
 # functions
