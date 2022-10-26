@@ -39,7 +39,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         self.params = {}
         self.colors = {}
         self.hd_cbx_names = []
-        self.personal_memo = {"follow" : [], "memo" : ""}
+        self.personal_memo = {"follow" : [], "memo" : "", "set" : {"prj" : [], "table_query" : "", "table_sort" : ""}}
         self.previous_selected_ticket = None
         self.values = None
         self._initialize() 
@@ -107,6 +107,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         self.display_memo_item_in_r7_multi()
         self.display_follow_up_tickets()
         self.display_order_list_in_l4()
+        self.set_previous_inputs()
 
 
     def parse_event(self):
@@ -149,7 +150,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
 
         return event, pos, item, eid
 
-
+    # TODO : 関数を下に移動
     def is_every_prj_in_checkbox(self):
         if len(self.hd_cbx_names) < 1:
             return True
@@ -158,6 +159,17 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
                 continue
             return False
         return True
+
+    def set_previous_inputs(self):
+
+        if not self.values["-l3_inp_00-"]:
+            self.values["-l3_inp_00-"] = self.personal_memo["set"]["table_query"]
+            self.window["-l3_inp_00-"].update(self.personal_memo["set"]["table_query"])
+        if not self.values["-l3_inp_01-"]:
+            self.values["-l3_inp_01-"] = self.personal_memo["set"]["table_sort"]
+            self.window["-l3_inp_01-"].update(self.personal_memo["set"]["table_sort"])
+
+
 
 # ==========================================================================
 # functions
@@ -183,12 +195,22 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         """
         if not eids:
             eids = [i for i in range(len(self.prj))]
+        else:
+            for eid in eids:
+                if self.hd_cbx[eid].get():
+                    self.personal_memo["set"]["prj"].append(self.prj[eid])
+                    self.personal_memo["set"]["prj"] = list(set(self.personal_memo["set"]["prj"]))
+                else:
+                    if self.prj[eid] in self.personal_memo["set"]["prj"]:
+                        self.personal_memo["set"]["prj"].remove(self.prj[eid])
 
         for eid in eids:
             if self.hd_cbx[eid].get():
                 self.l1_frm[eid][0].unhide_row()
             else:
                 self.l1_frm[eid][0].hide_row()
+
+        
 
     def header_alert_update(self, flag, str):
 
@@ -401,6 +423,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         for i, (todo_ids, often_ids) in enumerate(zip(self.graph_ticket_ids_todo, self.graph_ticket_ids_often)):
             # flag_exist = (len(todo_ids) - 1 + len(often_ids)) > 0
             flag_exist = len(todo_ids) > 1
+            flag_exist = flag_exist if self.prj[i] not in self.personal_memo["set"]["prj"] else 1
             self.values[f"-hd_cbx_{i:02d}-"] = flag_exist
             self.window[f"-hd_cbx_{i:02d}-"].update(flag_exist)
         self.show_prj_boxes_as_chk_box()
@@ -535,6 +558,9 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
             row = self.l3_tbl_df.index.get_loc(ticket_id)
 
         self.window["-l3_tbl_00-"].update(values=self.l3_tbl_df.values.tolist(), select_rows=[row], row_colors=table_colors)
+        self.personal_memo["set"]["table_query"] = query_arg
+        self.personal_memo["set"]["table_sort"] = ",".join(sort_arg)
+
 
         return
 
