@@ -5,6 +5,8 @@
 import os
 import glob
 import json
+import datetime
+import pickle
 from collections import defaultdict 
 from distutils.util import strtobool
 
@@ -49,8 +51,34 @@ class ScheduleManageIO:
         self.trk_file = os.path.join(root_dir, r"trk/trk_file_--name--.pkl")
         self.pln_file = os.path.join(root_dir, r"pln/pln_file_--name--.pkl")
         self.ord_file = os.path.join(root_dir, r"ord/--name--_--index--.pkl")
+        self.backup_dir_save = os.path.join(root_dir, "backup")
+        self.backup_dir_local = r"./backup"
 
         return None
+
+
+    def _save_backup_process(self, file_dir, file_name, obj, backups=5):
+        
+        if not os.path.exists(file_dir):
+            os.makedirs(file_dir, exist_ok=True)
+        file_name_pre = datetime.datetime.strftime(datetime.datetime.now(), r"%y%m%d%H%M_")
+        new_file_path = os.path.join(file_dir, file_name_pre + file_name)
+
+        files = glob.glob(os.path.join(file_dir, "*.pkl"))
+        files = [file for file in files if file_name in file]
+        if len(files) > backups:
+            files.sort()
+            if files[-1] != new_file_path:
+                os.remove(files[0])
+
+        with open(new_file_path, mode="wb") as f:
+            pickle.dump(obj, f)
+
+
+    def _save_backup_file(self, obj, file_name):
+        self._save_backup_process(self.backup_dir_save, file_name, obj, backups=3)
+        if self.params.back_up_at_local:
+            self._save_backup_process(self.backup_dir_local, file_name, obj, backups=10)
 
 
     def save_files(self, popup=True):
@@ -132,7 +160,7 @@ class ScheduleManageIO:
     def _save_prj_file(self):
         file_name = self.prj_file.replace("--name--", self.params.user_name)
         self.prj_dfs[self.params.user_name].to_pickle(file_name)
-
+        self._save_backup_file(self.prj_dfs[self.params.user_name], "prj_df.pkl")
 
     def _read_daily_schedule_file(self):
         self.sch_dfs = {}
@@ -154,6 +182,7 @@ class ScheduleManageIO:
                 return
             os.makedirs(dir_path) 
         self.sch_dfs[self.params.user_name].to_pickle(file_name)
+        self._save_backup_file(self.sch_dfs[self.params.user_name], "sch_df.pkl")
 
 
     def _read_man_hour_tracker_file(self):
@@ -176,7 +205,7 @@ class ScheduleManageIO:
                 return
             os.makedirs(dir_path)
         self.trk_dfs[self.params.user_name].to_pickle(file_name)
-
+        self._save_backup_file(self.trk_dfs[self.params.user_name], "trk_df.pkl")
 
     def _read_monthly_plan_file(self):
         self.pln_dfs = {}
@@ -202,6 +231,7 @@ class ScheduleManageIO:
                 return
             os.makedirs(dir_path)
         self.pln_dfs[self.params.user_name].to_pickle(file_name)
+        self._save_backup_file(self.pln_dfs[self.params.user_name], "pln_df.pkl")
 
 
     def _save_order(self, input_df):
