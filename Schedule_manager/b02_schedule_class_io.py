@@ -41,7 +41,6 @@ class ScheduleManageIO:
         with open(self.setting_file, encoding="UTF-8") as f:
             settings = json.load(f)
         
-        # TODO : raise error
         root_dir  = settings["file_save_dir"]
         self.params = SettingParameters(**settings["param"])
         self.sizes = GUISize(**settings["size"])

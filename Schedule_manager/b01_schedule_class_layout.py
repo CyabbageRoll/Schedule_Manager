@@ -254,8 +254,6 @@ class ScheduleManageLayout:
         r1_clm2 = [sg.Column([r1_txt2, r1_tbl2])]
         r1_clm3 = [sg.Column([r1_txt3, r1_tbl3])]
         r1_clm1 = [sg.Column([r1_clm2 + r1_txt1 + r1_clm3])]
-
-        # TODO : size setting
         r1_txt4 = [sg.Text("", key="-r1_txt_04-")]
 
         r1 = [sg.Tab("planing", [r1_clm, r1_clm1, r1_txt4], key="r1")]

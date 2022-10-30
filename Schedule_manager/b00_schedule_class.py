@@ -152,25 +152,6 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
 
         return event, pos, item, eid
 
-    # TODO : 関数を下に移動
-    def is_every_prj_in_checkbox(self):
-        if len(self.hd_cbx_names) < 1:
-            return True
-        for prj in self.prj:
-            if prj in self.hd_cbx_names:
-                continue
-            return False
-        return True
-
-    def set_previous_inputs(self):
-
-        if not self.values["-l3_inp_00-"]:
-            self.values["-l3_inp_00-"] = self.personal_memo["set"]["table_query"]
-            self.window["-l3_inp_00-"].update(self.personal_memo["set"]["table_query"])
-        if not self.values["-l3_inp_01-"]:
-            self.values["-l3_inp_01-"] = self.personal_memo["set"]["table_sort"]
-            self.window["-l3_inp_01-"].update(self.personal_memo["set"]["table_sort"])
-
 
 
 # ==========================================================================
@@ -1999,10 +1980,27 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         return
 
 
-
 # ==========================================================================
 # internal use functions
 #===========================================================================
+    def is_every_prj_in_checkbox(self):
+        if len(self.hd_cbx_names) < 1:
+            return True
+        for prj in self.prj:
+            if prj in self.hd_cbx_names:
+                continue
+            return False
+        return True
+
+    def set_previous_inputs(self):
+
+        if not self.values["-l3_inp_00-"]:
+            self.values["-l3_inp_00-"] = self.personal_memo["set"]["table_query"]
+            self.window["-l3_inp_00-"].update(self.personal_memo["set"]["table_query"])
+        if not self.values["-l3_inp_01-"]:
+            self.values["-l3_inp_01-"] = self.personal_memo["set"]["table_sort"]
+            self.window["-l3_inp_01-"].update(self.personal_memo["set"]["table_sort"])
+
     # calculation =======================================================================
     def _business_days(self, begin, end):
         """counting business days
