@@ -26,8 +26,10 @@ from c01_func_priority_calculation import SortTickets
 
 class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
 
-    def __init__(self):
+    def __init__(self, logger):
 
+        self.logger = logger
+        self.logger.info("ScheduleManage Class start init")
         self.setting_file = r"../sch_m_setting.json"
         self.memo_file = r"../personal_memo.json"
         self.prj_dfs = {}
@@ -52,7 +54,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         warning_msg = self._read_settings_file()
         if warning_msg:
             sg.popup_ok(warning_msg)
-        
+            self.logger.info(f"warning at initialize {warning_msg}")
         self.reload_files(popup=False)
 
     def create_original_sg_theme(self):
