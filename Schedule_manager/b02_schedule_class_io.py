@@ -75,6 +75,7 @@ class ScheduleManageIO:
 
 
     def _save_backup_file(self, obj, file_name):
+        file_name += f"_file_{self.params.user_name}.pkl"
         self._save_backup_process(self.backup_dir_save, file_name, obj, backups=3)
         if self.params.back_up_at_local:
             self._save_backup_process(self.backup_dir_local, file_name, obj, backups=10)
@@ -163,7 +164,7 @@ class ScheduleManageIO:
     def _save_prj_file(self):
         file_name = self.prj_file.replace("--name--", self.params.user_name)
         self.prj_dfs[self.params.user_name].to_pickle(file_name)
-        self._save_backup_file(self.prj_dfs[self.params.user_name], "prj_df.pkl")
+        self._save_backup_file(self.prj_dfs[self.params.user_name], "prj")
 
     def _read_daily_schedule_file(self):
         self.sch_dfs = {}
@@ -185,7 +186,7 @@ class ScheduleManageIO:
                 return
             os.makedirs(dir_path) 
         self.sch_dfs[self.params.user_name].to_pickle(file_name)
-        self._save_backup_file(self.sch_dfs[self.params.user_name], "sch_df.pkl")
+        self._save_backup_file(self.sch_dfs[self.params.user_name], "sch")
 
 
     def _read_man_hour_tracker_file(self):
@@ -208,7 +209,7 @@ class ScheduleManageIO:
                 return
             os.makedirs(dir_path)
         self.trk_dfs[self.params.user_name].to_pickle(file_name)
-        self._save_backup_file(self.trk_dfs[self.params.user_name], "trk_df.pkl")
+        self._save_backup_file(self.trk_dfs[self.params.user_name], "trk")
 
     def _read_monthly_plan_file(self):
         self.pln_dfs = {}
@@ -234,7 +235,7 @@ class ScheduleManageIO:
                 return
             os.makedirs(dir_path)
         self.pln_dfs[self.params.user_name].to_pickle(file_name)
-        self._save_backup_file(self.pln_dfs[self.params.user_name], "pln_df.pkl")
+        self._save_backup_file(self.pln_dfs[self.params.user_name], "pln")
 
 
     def _save_order(self, input_df):
