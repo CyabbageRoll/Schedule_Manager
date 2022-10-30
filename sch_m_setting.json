@@ -15,7 +15,8 @@
             "すごい社員",
             "がんばる上司"
         ],
-        "auto_priority_activate": true
+        "auto_priority_activate": true,
+        "back_up_at_local": true
     },
     "size": {
         "window_w" : 1600,

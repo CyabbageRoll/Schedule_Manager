@@ -1,5 +1,36 @@
+# %%==========================================================================
+# logging
+# ============================================================================
+import os
+from logging import getLogger, Formatter, StreamHandler, DEBUG, INFO
+from logging import handlers
+
+def get_module_logger(module, log_file=r"./log/logging.txt", verbose=False):
+    
+    os.makedirs(os.path.dirname(log_file), exist_ok=True)
+    logger = getLogger(module)
+    logger = _set_handler(logger, StreamHandler(), False)
+    logger = _set_handler(logger, handlers.RotatingFileHandler(log_file, maxBytes=1000000, backupCount=5), verbose)
+    logger.setLevel(DEBUG)
+    logger.propagate = False
+    return logger
+
+def _set_handler(logger, handler, verbose):
+    if verbose:
+        handler.setLevel(DEBUG)
+    else:
+        handler.setLevel(INFO)
+    handler.setFormatter(Formatter('%(asctime)s %(name)s:%(lineno)s %(funcName)s [%(levelname)s]: %(message)s'))
+    logger.addHandler(handler)
+    return logger
+
+logger = get_module_logger(__name__, verbose=True)
+logger.info('Application starts')
+logger.info('logger set')
+
+
 # %% =======================================================================
-# import libraries
+logger.debug("import libraries at main file")
 #===========================================================================
 # default
 import os
@@ -18,7 +49,7 @@ from b00_schedule_class import ScheduleManage as SchM
 #===========================================================================
 # window layout is defined in b01_schedule_class_base
 # button or other functions are defined in b01_schedule_class
-sch_m = SchM()
+sch_m = SchM(logger)
 sch_m.create_window()
 sch_m.window.read(timeout=1)
 
@@ -27,25 +58,21 @@ sch_m.window.read(timeout=1)
 #===========================================================================
 # Event Loop to process "events" and get the "values" of the inputs
 last_update_time = datetime.datetime.now()
-while True:
 
-    # if datetime.datetime.now() - last_update_time > datetime.timedelta(seconds=60*5): # TODO : settingで設定できるように
-    #     last_update_time = datetime.datetime.now()
-    #     try:
-    #         sch_m.save_files()
-    #         sch_m._read_daily_schedule_file()
-    #         sch_m.read_order()
-    #         sch_m.display_order_list_in_l4()
-    #         print("auto upload and download")
-    #     except:
-    #         pass
+def gui_main(sch_m):
 
     event, pos, item, eid = sch_m.parse_event()
-    # if event and "MV" not in event:
-    #     print(event, pos, item, eid)
+    if event and "MV" not in event:
+        logger.debug(event)
 
     if event == sg.WIN_CLOSED: # if user closes window or clicks cancel
-        break
+        return False
+
+    if event == "Cs-":
+        sch_m.save_files()
+    if event == "Cr-":
+        sch_m.reload_files()
+        sch_m.update_tabs()
 
     # %% =======================================================================
     # header
@@ -72,7 +99,7 @@ while True:
         if item == "rdi":  # radio button
             sch_m.update_tabs()
 
-        continue
+        return True
 
     # %% =======================================================================
     # left tab
@@ -88,7 +115,7 @@ while True:
     if pos == "lt":
         if item == "grp":
             sch_m.l1_chart_draw()
-        continue
+        return True
 
     if pos == "l1":  # left tab1
         if item[:3] == "grp":
@@ -103,10 +130,10 @@ while True:
                         sch_m.display_values_in_df_to_r6(mouse_on_prj)
             if "RC" in item:
                 sch_m.process_l1_right_click_menu(event, eid)
-        continue
+        return True
 
     if pos == "l2":  # left tab2
-        continue
+        return True
 
     if pos == "l3":  # left tab2
         if item == "btn":
@@ -114,12 +141,12 @@ while True:
                 sch_m.update_priority_as_per_button_pressed(eid)
             if eid == 4:
                 sch_m.calculate_priority()
-                sch_m.update_l3_table()
+                sch_m.display_l3_table_as_multiline_command()
             if eid == 20:
                 sch_m.display_l3_table_as_multiline_command()
         if "tbl" in item:
             sch_m.l3_table_selected_ticket_changed()
-        continue
+        return True
 
     if pos == "l4":
         if item == "btn":
@@ -127,13 +154,13 @@ while True:
                 sch_m.accept_order()
             if eid == 1:
                 sch_m.deny_order()
-        continue
+        return True
 
     if pos == "l5":
         if item == "btn":
             if eid == 0:
                 sch_m.delete_follow_ticket()
-        continue
+        return True
 
     # %% =======================================================================
     # right tab
@@ -143,7 +170,7 @@ while True:
             sch_m.set_right_click_menu_of_daily_table()
             sch_m.update_tabs()
     
-    if pos == "r1":  # right tab1
+    if pos == "r1":  # right tab1 -plan
         if item[:3] == "inp":
             if len(item) == 6:
                 if item[4:6] == "LC":
@@ -161,9 +188,9 @@ while True:
         if item == "right_menu":
             sch_m.input_prj12_and_task_by_right_click(event)
             sch_m.set_right_click_menu_of_prj12_task()
-        continue
+        return True
 
-    if pos == "r2":  # right tab2
+    if pos == "r2":  # right tab2 -daily
         if item == "btn":
             # if eid == 0:
             #     sch_m.r2_save_plan_button_pressed()
@@ -183,9 +210,15 @@ while True:
             sch_m.display_team_box()
         if item == "right_menu":
             sch_m.set_daily_row_as_per_right_click(eid)
-        continue
+        if item == "tbl-DR":
+            sch_m.select_r2_table_rows_with_mouse_drag()
+        # if item == "tbl-BP":
+        #     sch_m.select_r2_table_rows_with_mouse_click()
+        if item == "tbl-BR":
+            sch_m.r2_table_start_release()
+        return True
 
-    if pos == "r3":  # right tab3
+    if pos == "r3":  # right tab3 -team
         if item == "btn":
             if eid == 0:
                 sch_m.r3_mail_button_pressed()
@@ -193,20 +226,20 @@ while True:
                 sch_m.r3_folder_button_pressed()
             if eid == 2:
                 sch_m.r3_memo_button_pressed()
-        continue
+        return True
 
-    if pos == "r4":  # right tab4
-        continue
+    if pos == "r4":  # right tab4 -fever
+        return True
 
-    if pos == "r5":  # right tab5
+    if pos == "r5":  # right tab5 -plan
         if item == "btn":
             sch_m.change_displayed_plan_on_multiline(eid)
             sch_m.display_plans_on_multiline()
         if item == "mul":
             sch_m.got_plans_from_multiline(eid)
-        continue
+        return True
 
-    if pos == "r6":  # right tab6
+    if pos == "r6":  # right tab6 -task
         if item == "inp":
             sch_m.set_color_of_boxes_inputted_invalid_value_r6()
             sch_m.set_right_click_menu_of_prj12_task()
@@ -218,18 +251,43 @@ while True:
         if item[:4] == "btn2":
             if eid <= 1:
                 # 順番入れ替え機能の要望があれば追加する
-                continue
+                return True
             if eid <= 2:
                 sch_m.table_items_into_multiline_r6()
-                continue
+                return True
             if eid == 3:
                 sch_m.multiline_item_into_table_r6()
-                continue
+                return True
 
-    if pos == "r7":
+    if pos == "r7":  # right tab7 -memo
         if item == "mul":
             sch_m.get_memo_items_from_r7()
-        continue
+        return True
 
+    if pos == "r8":  # right tab8 -log
+        if item == "btn":
+            if eid == 0:
+                sch_m.display_info_in_r8_multi()
+            if eid == 1:
+                sch_m.log_button_1()
+            if eid == 2:
+                sch_m.log_button_2()
+            if eid == 3:
+                sch_m.log_button_3()
+        return True
+
+    return True
+
+
+flag = True
+while flag:
+    try:
+        flag = gui_main(sch_m)
+    except Exception as e:
+        flag = False
+        logger.exception("main loop")
+        # sg.popup_ok(f"Error!!! {e} close application. sorry.")
+
+logger.info("window_close")
 sch_m.window.close()
 

@@ -6,6 +6,7 @@ import os
 import bisect
 import hashlib
 import datetime
+from collections import defaultdict 
 from heapq import heapify, heappush, heappop
 
 # pip or conda install
@@ -25,8 +26,10 @@ from c01_func_priority_calculation import SortTickets
 
 class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
 
-    def __init__(self):
+    def __init__(self, logger):
 
+        self.logger = logger
+        self.logger.info("ScheduleManage Class start init")
         self.setting_file = r"../sch_m_setting.json"
         self.memo_file = r"../personal_memo.json"
         self.prj_dfs = {}
@@ -37,20 +40,22 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         self.sizes = {}
         self.params = {}
         self.colors = {}
-        self.personal_memo = {"follow" : [], "memo" : ""}
+        self.hd_cbx_names = []
+        self.personal_memo = {"follow" : [], "memo" : "", "set" : {"prj" : [], "table_query" : "", "table_sort" : ""}}
         self.previous_selected_ticket = None
         self.values = None
         self._initialize() 
         self.app_schedule = [""] * self.params.daily_table_rows
-
+        self.task_updating_df = self.prj_dfs[self.params.user_name].iloc[:1]
+        self.r2_table_click_start = []
 
     def _initialize(self):
 
         warning_msg = self._read_settings_file()
         if warning_msg:
             sg.popup_ok(warning_msg)
-        
-        self.reload_files()
+            self.logger.info(f"warning at initialize {warning_msg}")
+        self.reload_files(popup=False)
 
     def create_original_sg_theme(self):
 
@@ -93,13 +98,8 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
     def update_tabs(self):
 
         self._priority_update()
-        l3_tbl_df = self.prj_dfs[self.params.user_name][self.params.priority_list]
-        self.window["-l3_tbl_00-"].update(values=l3_tbl_df.values.tolist())
-        
         if self.values["-l3_cbx_20-"]:
             self.calculate_priority()
-        
-        # self.update_l3_table()
         self.l1_chart_draw()
         self.set_right_click_menu_of_prj12_task()
         self.r2_daily_schedule_update()
@@ -109,6 +109,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         self.display_memo_item_in_r7_multi()
         self.display_follow_up_tickets()
         self.display_order_list_in_l4()
+        self.set_previous_inputs()
 
 
     def parse_event(self):
@@ -123,7 +124,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
             if event is l1 or l3 right click menu
                 return event, "l1", "grp-RC", ticket id
         """
-        event, self.values = self.window.read(timeout=1000*60*10) # TODO : settingで設定できるように
+        event, self.values = self.window.read(timeout=1000*60*10) # TODO : set in json file
 
         if not event:
             return event, None, None, 0
@@ -152,6 +153,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         return event, pos, item, eid
 
 
+
 # ==========================================================================
 # functions
 #===========================================================================
@@ -176,12 +178,22 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         """
         if not eids:
             eids = [i for i in range(len(self.prj))]
+        else:
+            for eid in eids:
+                if self.hd_cbx[eid].get():
+                    self.personal_memo["set"]["prj"].append(self.prj[eid])
+                    self.personal_memo["set"]["prj"] = list(set(self.personal_memo["set"]["prj"]))
+                else:
+                    if self.prj[eid] in self.personal_memo["set"]["prj"]:
+                        self.personal_memo["set"]["prj"].remove(self.prj[eid])
 
         for eid in eids:
             if self.hd_cbx[eid].get():
                 self.l1_frm[eid][0].unhide_row()
             else:
                 self.l1_frm[eid][0].hide_row()
+
+        
 
     def header_alert_update(self, flag, str):
 
@@ -249,14 +261,6 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         self.previous_selected_ticket = ticket_id
         if self.values["-r1_cbx_00-"]:
             return
-
-        """
-        # XXX : bind error ?
-        File "a01_gui_main.py", line 86, in <module>
-        ticket_id = sch_m.get_and_remain_mouse_on_ticket_id(eid)
-        self.mouse_x = int(self.l1_grp[eid].user_bind_event.x / self.sizes.left_tab1_canvas_w * self.sizes.graph_top_right_h)
-        AttributeError: 'NoneType' object has no attribute 'x'
-        """
 
         return ticket_id
 
@@ -334,11 +338,11 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         txt = [d.strftime("%m/%d(%a)") for d in l1_calendar if d.weekday() < 5]
         self.l1_grp_cal.erase()
         for i, t in enumerate(txt):
-            self.l1_grp_cal.draw_text(t, (50+i*100, 50), color=self.theme.graph_text, font=(self.params.font, self.params.font_size))
-            self.l1_grp_cal.draw_line((i*100, 0), (i*100, 100), color=self.theme.graph_line, width=1)
+            self.l1_grp_cal.draw_text(t, (50+i*100, 50), color=self.theme.text, font=(self.params.font, self.params.font_size))
+            self.l1_grp_cal.draw_line((i*100, 0), (i*100, 100), color=self.theme.text, width=1)
         left_edge = self.sizes.graph_top_right_w
-        self.l1_grp_cal2.draw_text("tickets", (left_edge // 2, 50), color=self.theme.graph_text, font=(self.params.font, self.params.font_size))
-        self.l1_grp_cal2.draw_line((left_edge, 0), (left_edge, 100), color=self.theme.graph_line, width=1)
+        self.l1_grp_cal2.draw_text("tickets", (left_edge // 2, 50), color=self.theme.text, font=(self.params.font, self.params.font_size))
+        self.l1_grp_cal2.draw_line((left_edge, 0), (left_edge, 100), color=self.theme.text, width=1)
 
         # ticket id and position list. these are used to know which ticket mouse cursor is on
         self.graph_positions_todo = [[0] for i in range(len(self.prj))]
@@ -402,6 +406,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         for i, (todo_ids, often_ids) in enumerate(zip(self.graph_ticket_ids_todo, self.graph_ticket_ids_often)):
             # flag_exist = (len(todo_ids) - 1 + len(often_ids)) > 0
             flag_exist = len(todo_ids) > 1
+            flag_exist = flag_exist if self.prj[i] not in self.personal_memo["set"]["prj"] else 1
             self.values[f"-hd_cbx_{i:02d}-"] = flag_exist
             self.window[f"-hd_cbx_{i:02d}-"].update(flag_exist)
         self.show_prj_boxes_as_chk_box()
@@ -412,8 +417,8 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
 
     # l3 =======================================================================
     def update_priority_as_per_button_pressed(self, eid):
-        # TODO : これは機能を消す
         """
+        WARNING!! currently auto priority function is used. This function is not used.
         priority of selected ticket is changed depending on the button. 
         And update table
         Args:
@@ -428,12 +433,13 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         steps = [-10, -1, 2, 11]
         step = max(1, current_pri + steps[eid]) - current_pri
         self._priority_update(ticket_id=ticket_id, step=step)
-        self.update_l3_table(ticket_id)
+        self.display_l3_table_as_multiline_command(ticket_id)
 
         return
 
 
     def update_l3_table(self, ticket_id=None):
+        # currently not used. display_l3_table_as_multiline_command is used.
         name = self._get_activated_member()
         l3_tbl_df = self.prj_dfs[name][self.params.priority_list]
         row = self.prj_dfs[name].index.get_loc(ticket_id) if ticket_id else 0
@@ -476,7 +482,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
     def get_selected_ticket_id_in_table(self):
         if not self.values["-l3_tbl_00-"]:
             return None
-        indices = [self.prj_dfs[self.params.user_name].index.values[row] for row in self.values["-l3_tbl_00-"]]
+        indices = [self.l3_tbl_df.index.values[row] for row in self.values["-l3_tbl_00-"]]
         ticket_id = indices[0]
         return ticket_id
 
@@ -494,13 +500,28 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
             # print(df.loc[tid, "Task"], df.loc[tid, "Ticket"], i)
 
         self._priority_update()
-        # self.update_l3_table()
 
 
-    def display_l3_table_as_multiline_command(self):
+    def _convert_df_str_to_datetime_l3_tbl(self, df):
+        date_col = ["Ready_date", "Due_date", "End_date_reg"]
+        for col in date_col:
+            df[col] = pd.to_datetime(df[col], format=r"%Y/%m/%d")
+        return df
+
+    def _convert_df_datetime_to_str_l3_tbl(self, df):
+        date_col = ["Ready_date", "Due_date", "End_date_reg"]
+        for col in date_col:
+            df[col] = df[col].dt.strftime(r"%Y/%m/%d")
+            df.loc[df[col] != df[col], col] = ""
+        return df
+
+
+    def display_l3_table_as_multiline_command(self, ticket_id=None):
 
         name = self._get_activated_member()
-        l3_tbl_df = self.prj_dfs[name][self.params.priority_list]
+        self.l3_tbl_df = self.prj_dfs[name][self.params.priority_list[:-1]].copy()
+        self.l3_tbl_df["Index"] = self.l3_tbl_df.index
+        self.l3_tbl_df = self._convert_df_str_to_datetime_l3_tbl(self.l3_tbl_df)
         query_arg = self.window["-l3_inp_00-"].get()
         sort_arg = self.window["-l3_inp_01-"].get()
         sort_arg = sort_arg.replace("'", "").replace('"', "")
@@ -512,16 +533,33 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
 
         if query_arg:
             try:
-                l3_tbl_df = l3_tbl_df.query(query_arg)
+                self.l3_tbl_df = self.l3_tbl_df.query(query_arg)
             except Exception as e:
                 self.window["-l3_txt_00-"].update(e, background_color=self.theme.alert)
         if sort_arg[0]:
             try:
-                l3_tbl_df = l3_tbl_df.sort_values(sort_arg)
+                self.l3_tbl_df = self.l3_tbl_df.sort_values(sort_arg)
             except Exception as e:
                 self.window["-l3_txt_01-"].update(e, background_color=self.theme.alert)
 
-        self.window["-l3_tbl_00-"].update(values=l3_tbl_df.values.tolist())
+        table_colors = [[] for _ in range(self.l3_tbl_df.shape[0])]
+        for i, tid in enumerate(self.l3_tbl_df.index.values.tolist()):
+            if self.l3_tbl_df.loc[tid, "Status"] == "Done":
+                table_colors[i] = [i, self.theme.table_ticket_done]
+            elif self.l3_tbl_df.loc[tid, "Status"] == "Often":
+                table_colors[i] = [i, self.theme.table_ticket_often]
+            else:
+                table_colors[i] = [i, self.theme.table_ticket_other]
+
+        row = 0
+        if ticket_id and ticket_id in self.l3_tbl_df.index:
+            row = self.l3_tbl_df.index.get_loc(ticket_id)
+        
+        self.l3_tbl_df = self._convert_df_datetime_to_str_l3_tbl(self.l3_tbl_df)
+        self.window["-l3_tbl_00-"].update(values=self.l3_tbl_df.values.tolist(), select_rows=[row], row_colors=table_colors)
+        self.personal_memo["set"]["table_query"] = query_arg
+        self.personal_memo["set"]["table_sort"] = ",".join(sort_arg)
+
 
         return
 
@@ -1521,6 +1559,32 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         self.update_tabs()
         return
 
+    def select_r2_table_rows_with_mouse_click(self):
+        self.r2_table_click_start = self.values["-r2_tbl_00-"]
+        print(self.r2_table_click_start)
+
+    def select_r2_table_rows_with_mouse_drag(self):
+        row = self.window["-r2_tbl_00-"].user_bind_event.y // self.sizes.tbl_row_hight
+        row = max(row, 1)
+        row = min(row, self.params.daily_table_rows-2)
+        
+        if not self.r2_table_click_start:
+            self.r2_table_click_start = [row]
+        row_s = self.r2_table_click_start[0]
+        if row_s > row:
+            row_s, row = row, row_s
+
+        select_rows = [i for i in range(row_s-1, row)]
+        self.window["-r2_tbl_00-"].update(select_rows=select_rows)
+
+        # print(self.window["-r2_tbl_00-"].Widget.yview_scroll.)
+        # aa = vars(self.window["-r2_tbl_00-"].Widget.yview_scroll)
+        # print(aa)
+        # print(self.window["-r2_tbl_00-"].Widget.yview_scroll.__get__(0))
+
+    def r2_table_start_release(self):
+        self.r2_table_click_start = []
+
 
     # r3 =======================================================================
     def display_team_box(self):
@@ -1673,7 +1737,6 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
 
     def table_items_into_multiline_r6(self):
         txt = ""
-        # FIXME : いきなりボタンを押すとself.task_updating_dfが存在しないので落ちる
         for idx in self.task_updating_df.index:
             single_line = self.task_updating_df.loc[idx, ["Ticket", "Estimation", "Ready_date", "Due_date"]].values.tolist()
             single_line = [s if s else "-" for s in single_line]
@@ -1794,7 +1857,21 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         # update prev- and next- tickets as per table order, because total priority is defined as per those.
         prev_idx = None
         ids = self.task_updating_df.index
-        for idx in self.task_updating_df.index:
+
+        new_ids = []
+        for idx in ids:
+            if idx not in self.prj_dfs[self.params.user_name].index:
+                new_ids.append(idx)
+        if not len(new_ids):
+            return
+
+        msg = f"Update {self.task_updating_df.loc[ids[0], 'Project1']} - {self.task_updating_df.loc[ids[0], 'Project2']} - {self.task_updating_df.loc[ids[0], 'Task']}\n"
+        for idx in new_ids:
+            msg += f"{self.task_updating_df.loc[idx, 'Ticket']} \n"
+        if sg.popup_ok_cancel(msg) != "OK":
+            return
+
+        for idx in ids:
             # ticket in this task is disused but remain ticket of other task
             # previous
             prev_tickets = self.task_updating_df.loc[idx, "Prev_task"].split(",")
@@ -1832,9 +1909,98 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         self.window["-r7_mul_00-"].update(self.personal_memo["memo"])
 
 
+    # r８ =======================================================================
+    def display_info_in_r8_multi(self):
+        info = self.create_r8_information()
+        self.values["-r8_txt_00-"] = info
+        self.window["-r8_txt_00-"].update(info)
+
+    def create_r8_information(self):
+        info = []
+        info.append(self.window["-r2_txt_02-"].get())
+        info.append(r" Begin   ~    End    (Total)   <Break>")
+        info.append(self.window["-r2_txt_03-"].get()[5:])
+        info.append("")
+        aggregate_hours = self.aggregated_daily_project_hours()
+        name = ["Project1", "Project2", "Task", "Ticket"]
+        for hours_dict, name in zip(aggregate_hours, name):
+            info.append(f"◆ hours as per {name}")
+            info.append(self.to_str_list_aggregated_hours(hours_dict))
+        
+        return "\n".join(info)
+
+    def aggregated_daily_project_hours(self):
+
+        date = self.window["-r2_txt_02-"].get()
+        name = self.params.user_name
+        sch_user = self.sch_dfs[name][date].tolist()[:24*4]
+
+        # aggregate hour as per index
+        work_hour = defaultdict(float)
+        for idx in sch_user:
+            if idx:
+                work_hour[idx] += 0.25
+
+        # create keys
+        for idx, hour in work_hour.items(): 
+            prj1 = f"{self.prj_dfs[name].loc[idx, 'Project1']:<15s} | "
+            prj2 = prj1 + f"{self.prj_dfs[name].loc[idx, 'Project2']:<15s} | "
+            task = prj2 + f"{self.prj_dfs[name].loc[idx, 'Task']:<15s} | "
+            tick = task + f"{self.prj_dfs[name].loc[idx, 'Ticket']:<15s} | "
+            work_hour[idx] = [[prj1, prj2, task, tick], hour]
+
+        # aggregate hour as per prj1, 2, task, ticket
+        prj1_hour = defaultdict(float)
+        prj2_hour = defaultdict(float)
+        task_hour = defaultdict(float)
+        tick_hour = defaultdict(float)
+        for k, hour in work_hour.values():
+            prj1_hour[k[0]] += hour
+            prj2_hour[k[1]] += hour
+            task_hour[k[2]] += hour
+            tick_hour[k[3]] += hour
+
+        return prj1_hour, prj2_hour, task_hour, tick_hour
+
+
+    def to_str_list_aggregated_hours(self, hours_dict):
+        prj_hours = []
+        prj_hours.extend(f"  {k:<10s}  {v}" for k, v in hours_dict.items())
+        prj_hours.append("")
+        return "\n".join(prj_hours)
+
+
+    def log_button_1(self):
+        return
+
+    def log_button_2(self):
+        return
+
+    def log_button_3(self):
+        return
+
+
 # ==========================================================================
 # internal use functions
 #===========================================================================
+    def is_every_prj_in_checkbox(self):
+        if len(self.hd_cbx_names) < 1:
+            return True
+        for prj in self.prj:
+            if prj in self.hd_cbx_names:
+                continue
+            return False
+        return True
+
+    def set_previous_inputs(self):
+
+        if not self.values["-l3_inp_00-"]:
+            self.values["-l3_inp_00-"] = self.personal_memo["set"]["table_query"]
+            self.window["-l3_inp_00-"].update(self.personal_memo["set"]["table_query"])
+        if not self.values["-l3_inp_01-"]:
+            self.values["-l3_inp_01-"] = self.personal_memo["set"]["table_sort"]
+            self.window["-l3_inp_01-"].update(self.personal_memo["set"]["table_sort"])
+
     # calculation =======================================================================
     def _business_days(self, begin, end):
         """counting business days
@@ -1903,7 +2069,6 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         """
         ticket id is generated with hash function from project1, 2, task, ticket and in charge
         """
-        # TODO : 日付も加えて同じ名前のチケットも作れるようにする
         item_ids = [i for i, title in enumerate(titles) if title in self.params.hash_item]
         x = "-".join([item[i] for i in item_ids] + [datetime.datetime.now().strftime(r"%S%f")])
         return hashlib.md5(x.encode()).hexdigest()

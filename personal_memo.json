@@ -73,5 +73,12 @@
             "がんばる上司"
         ]
     ],
-    "memo": "abcddddddddd\n\n\n\taaaaa\n\n\nv\t\nccc\n\tdd"
+    "memo": " 自由メモ欄\npersonal_memo.json に保存される",
+    "set": {
+        "prj": [
+            "お家づくり-部品作成"
+        ],
+        "table_query": "Project1 == 'Other'",
+        "table_sort": "Status,Update_Estimation"
+    }
 }

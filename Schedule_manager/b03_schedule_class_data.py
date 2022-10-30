@@ -20,7 +20,8 @@ class SettingParameters:
     font : str = "Meiryo"
     font_size : int = 10
     team_members : List[str] = field(default_factory=lambda: ["できる社員", "すごい社員", "がんばる上司"])
-    auto_priority_activate : bool = True
+    auto_priority_activate : bool = True,
+    back_up_at_local : bool = False
 
     columns : List[str] = field(default_factory=lambda:[
                                  "Project1", "Project2", "Task", "Ticket", "Detail", "Is_Task",
@@ -38,7 +39,7 @@ class SettingParameters:
     hash_item : List[str] = field(
         default_factory=lambda:["Project1", "Project2", "Task", "Ticket", "In_charge"])
     priority_list : List[str] = field(
-        default_factory=lambda:["Project1", "Project2", "Task", "Ticket", "In_charge", "Ready_date", "Due_date", "Status", "Update_Estimation", "End_date_reg", "Man_hour_reg", "Priority"])
+        default_factory=lambda:["Project1", "Project2", "Task", "Ticket", "In_charge", "Ready_date", "Due_date", "Status", "Update_Estimation", "End_date_reg", "Man_hour_reg", "Priority", "Index"])
     schedule_add_info : List[str] = field(
         default_factory=lambda:["Hour", "Health", "Safety", "Reasons_overwork", "Information", "Memo1", "Memo2", "Memo3"])
     status : List[str] = field(
