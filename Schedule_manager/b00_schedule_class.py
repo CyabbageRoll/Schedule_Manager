@@ -26,8 +26,10 @@ from c01_func_priority_calculation import SortTickets
 
 class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
 
-    def __init__(self):
+    def __init__(self, logger):
 
+        self.logger = logger
+        self.logger.info("ScheduleManage Class start init")
         self.setting_file = r"../sch_m_setting.json"
         self.memo_file = r"../personal_memo.json"
         self.prj_dfs = {}
@@ -52,7 +54,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         warning_msg = self._read_settings_file()
         if warning_msg:
             sg.popup_ok(warning_msg)
-        
+            self.logger.info(f"warning at initialize {warning_msg}")
         self.reload_files(popup=False)
 
     def create_original_sg_theme(self):
@@ -519,11 +521,26 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         self._priority_update()
 
 
+    def _convert_df_str_to_datetime_l3_tbl(self, df):
+        date_col = ["Ready_date", "Due_date", "End_date_reg"]
+        for col in date_col:
+            df[col] = pd.to_datetime(df[col], format=r"%Y/%m/%d")
+        return df
+
+    def _convert_df_datetime_to_str_l3_tbl(self, df):
+        date_col = ["Ready_date", "Due_date", "End_date_reg"]
+        for col in date_col:
+            df[col] = df[col].dt.strftime(r"%Y/%m/%d")
+            df.loc[df[col] != df[col], col] = ""
+        return df
+
+
     def display_l3_table_as_multiline_command(self, ticket_id=None):
 
         name = self._get_activated_member()
         self.l3_tbl_df = self.prj_dfs[name][self.params.priority_list[:-1]].copy()
         self.l3_tbl_df["Index"] = self.l3_tbl_df.index
+        self.l3_tbl_df = self._convert_df_str_to_datetime_l3_tbl(self.l3_tbl_df)
         query_arg = self.window["-l3_inp_00-"].get()
         sort_arg = self.window["-l3_inp_01-"].get()
         sort_arg = sort_arg.replace("'", "").replace('"', "")
@@ -556,7 +573,8 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         row = 0
         if ticket_id and ticket_id in self.l3_tbl_df.index:
             row = self.l3_tbl_df.index.get_loc(ticket_id)
-
+        
+        self.l3_tbl_df = self._convert_df_datetime_to_str_l3_tbl(self.l3_tbl_df)
         self.window["-l3_tbl_00-"].update(values=self.l3_tbl_df.values.tolist(), select_rows=[row], row_colors=table_colors)
         self.personal_memo["set"]["table_query"] = query_arg
         self.personal_memo["set"]["table_sort"] = ",".join(sort_arg)

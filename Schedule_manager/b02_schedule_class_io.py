@@ -35,6 +35,7 @@ class ScheduleManageIO:
                  return the key value, else, return False
         """
 
+        self.logger.info("read setting file")
         if not os.path.exists(self.setting_file):
             return "settings file is not existed"
         with open(self.setting_file, encoding="UTF-8") as f:
@@ -59,9 +60,8 @@ class ScheduleManageIO:
 
     def _save_backup_process(self, file_dir, file_name, obj, backups=5):
         
-        if not os.path.exists(file_dir):
-            os.makedirs(file_dir, exist_ok=True)
-        file_name_pre = datetime.datetime.strftime(datetime.datetime.now(), r"%y%m%d%H%M_")
+        os.makedirs(file_dir, exist_ok=True)
+        file_name_pre = datetime.datetime.strftime(datetime.datetime.now(), r"%y%m%d%H_")
         new_file_path = os.path.join(file_dir, file_name_pre + file_name)
 
         files = glob.glob(os.path.join(file_dir, "*.pkl"))
@@ -83,6 +83,7 @@ class ScheduleManageIO:
 
     def save_files(self, popup=True):
         """save prj, sch, trk dataframe(s) at user specified location"""
+        self.logger.info("save_files start")
         self._save_prj_file()
         self._save_daily_schedule_file()
         self._save_man_hour_tracker_file()
@@ -90,9 +91,11 @@ class ScheduleManageIO:
         self._save_personal_memo()
         if popup:
             sg.popup_no_buttons("Saved", auto_close=True, auto_close_duration=0.5)
+        self.logger.info("save_files done")
 
     def reload_files(self, popup=True):
         """read prj, sch, trk dataframe(s) from user specified location"""
+        self.logger.info("reload_files start")
         self._read_prj_file()
         self._read_daily_schedule_file()
         self._read_man_hour_tracker_file()
@@ -105,6 +108,7 @@ class ScheduleManageIO:
             sg.popup_no_buttons("restart window due to updating header checkboxes", auto_close=True, auto_close_duration=1)
             self.window.close()
             self.create_window()
+        self.logger.info("reload_files done")
     
 
     def save_settings_and_restart_app(self):
