@@ -10,7 +10,7 @@ def get_module_logger(module, log_file=r"./log/logging.txt", verbose=False):
     os.makedirs(os.path.dirname(log_file), exist_ok=True)
     logger = getLogger(module)
     logger = _set_handler(logger, StreamHandler(), False)
-    logger = _set_handler(logger, handlers.RotatingFileHandler(log_file, maxBytes=10000, backupCount=10), verbose)
+    logger = _set_handler(logger, handlers.RotatingFileHandler(log_file, maxBytes=1000000, backupCount=5), verbose)
     logger.setLevel(DEBUG)
     logger.propagate = False
     return logger
@@ -284,9 +284,9 @@ while flag:
     try:
         flag = gui_main(sch_m)
     except Exception as e:
-        logger.exception("main loop")
-        sg.popup_ok(f"Error!!! {e} close application. sorry.")
         flag = False
+        logger.exception("main loop")
+        # sg.popup_ok(f"Error!!! {e} close application. sorry.")
 
 logger.info("window_close")
 sch_m.window.close()
