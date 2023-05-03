@@ -777,6 +777,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         df.sort_values("title", inplace=True)
         menu = {}
         self.rid2idx = {}
+        rmenu = None
         for i, idx in enumerate(df.index):
             prj12 = df.loc[idx, "prj12"] 
             if prj12 not in menu.keys():
@@ -791,7 +792,8 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
             rmenu = ["r-menu of right click"] + [rmenu]
             # rmenu = ["A", ["B", ["B1", "B2"], "C", ["C1", "C2"]]]
 
-        self.window[f"-r2_tbl_00-"].set_right_click_menu(rmenu)
+        if rmenu:
+            self.window[f"-r2_tbl_00-"].set_right_click_menu(rmenu)
         
         return
 
@@ -1082,7 +1084,15 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
 
         # 2. check exist recode
         if self.prj_dfs[user_name].loc[ticket_id, "Man_hour_reg"].item() != 0:
-            sg.popup_ok("CNA NOT delete. this ticket has been already tracked in recode.")
+            sg.popup_ok("CAN NOT delete. this ticket has been already tracked in recode.")
+            return
+
+        # 2-2 check exist in daily schedule
+        col = self.window["-r2_txt_02-"].get()
+        sch_user = self.sch_dfs[user_name][col].tolist()
+        sch_user = sch_user[:24*4]
+        if delete_ds.name in sch_user:
+            sg.popup_ok("CAN NOT delete. this ticket is scheduled in daily table.")
             return
 
         msg = "delete ticket ok ???\n\n"
