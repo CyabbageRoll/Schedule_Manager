@@ -11,9 +11,9 @@
         "font": "Meiryo",
         "font_size": 8,
         "team_members": [
-            "できる社員",
+            "がんばる上司",
             "すごい社員",
-            "がんばる上司"
+            "できる社員"
         ],
         "auto_priority_activate": true,
         "back_up_at_local": true
