@@ -86,6 +86,10 @@ class ScheduleManageLayout:
 
     def _l1_layout(self):
 
+        # header
+        btn = [sg.Button("-", key="-l1_btn_00-", size=(2,1)), sg.Button("+", key="-l1_btn_01-", size=(2,1)), sg.Text("100%", key="-l1_txt_00-")]
+
+        # graph size
         gbl = (0, 0)
         gtr = (self.sizes.graph_top_right_w, self.sizes.graph_top_right_h)
 
@@ -101,7 +105,7 @@ class ScheduleManageLayout:
         self.l1_frm = [[sg.Frame(p, [[g2, g]], key=f"-l1_frm_{i:02d}-", border_width=0)] for i, (p, g, g2) in enumerate(zip(self.prj, self.l1_grp, self.l1_grp2))]
         self.l1_clm = [sg.Column(self.l1_frm_cal + self.l1_frm, scrollable=True, vertical_scroll_only=False, size=(self.sizes.left_tab_group_w, self.sizes.left_tab_group_h))]
 
-        l1 = [sg.Tab("Project", [self.l1_clm], key="-l1_tbg_00-")]
+        l1 = [sg.Tab("Project", [btn, self.l1_clm], key="-l1_tbg_00-")]
         return l1
 
 
@@ -376,13 +380,16 @@ class ScheduleManageLayout:
         # MV : mouse move
         # LC : left click
         # MC : mouse click
+        # CW : ctrl + mouse wheel
 
         for grp in self.l1_grp:
             grp.bind("<Motion>", "MV-")
             grp.bind("<ButtonPress>", "LC-")
+            grp.bind("<Control-MouseWheel>", "CW-")
         for grp in self.l1_grp2:
             grp.bind("<Motion>", "MV-")
             grp.bind("<ButtonPress>", "LC-")
+            grp.bind("<Control-MouseWheel>", "CW-")
 
         for i, inp in enumerate(self.r1_inp):
             if i in [4,5]:
@@ -390,6 +397,7 @@ class ScheduleManageLayout:
 
         self.window.bind("<Control-s>", "Cs-")
         self.window.bind("<Control-r>", "Cr-")
+        self.window.bind("<Control-Shift-R>", "CR-")
 
         self.window["-r2_tbl_00-"].bind("<Button1-Motion>", "DR-")
         self.window["-r2_tbl_00-"].bind("<ButtonPress>", "BP-")

@@ -73,6 +73,13 @@ def gui_main(sch_m):
     if event == "Cr-":
         sch_m.reload_files()
         sch_m.update_tabs()
+    if event == "CR-":
+        sch_m.save_files()
+        sch_m.reload_files()
+        sch_m.update_tabs()
+
+    # if event == "CW-":
+    #     print("cw")
 
     # %% =======================================================================
     # header
@@ -118,6 +125,11 @@ def gui_main(sch_m):
         return True
 
     if pos == "l1":  # left tab1
+        if item == "btn":
+            if eid == 0:
+                sch_m.shrink_l1_chart()
+            if eid == 1:
+                sch_m.enlarge_l1_chart()
         if item[:3] == "grp":
             if item == "grp" or item == "grp2":
                 sch_m.schedule_ticket_to_daily_table()

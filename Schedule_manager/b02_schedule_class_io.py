@@ -112,7 +112,7 @@ class ScheduleManageIO:
     
 
     def save_settings_and_restart_app(self):
-        # TODO : Need to be update setting tab and button
+        # TODO : Need to be updated setting tab and button
         settings_list = [self.SETTINGS_DIR, self.SETTINGS_PARAM, self.SETTINGS_SIZE]
         setting_type_list = [self.SETTINGS_DIR_TYPE, self.SETTINGS_PARAM_TYPE, self.SETTINGS_SIZE_TYPE]
 

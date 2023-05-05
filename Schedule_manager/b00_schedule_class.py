@@ -6,8 +6,10 @@ import os
 import bisect
 import hashlib
 import datetime
+from dateutil.relativedelta import relativedelta
 from collections import defaultdict 
 from heapq import heapify, heappush, heappop
+
 
 # pip or conda install
 import pandas as pd
@@ -319,7 +321,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         self.update_tabs()
 
 
-    def l1_chart_draw(self):
+    def l1_chart_draw(self, width_ratio=100):
         """
         tickets belongs to activated user are arranged in each project graph area
         tickets xy coordinates are calculated with self._calc_ticket_position.
@@ -331,15 +333,44 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         todo_ticket_pos_df = self._calc_ticket_position(tmp_df)
         tmp_df = self._create_temporary_df_for_cal_position(self.prj_dfs[name], "Often")
         often_ticket_pos_df = self._calc_ticket_position(tmp_df)
-
         # draw calendar top of the L1 tab
         begin_day = datetime.date.today()
-        l1_calendar = [begin_day + datetime.timedelta(days=i) for i in range(100)]
-        txt = [d.strftime("%m/%d(%a)") for d in l1_calendar if d.weekday() < 5]
+        if width_ratio <= -50:
+            l1_calendar = [begin_day + relativedelta(months=i) for i in range(100)]
+            txt = [d.strftime("%m") for d in l1_calendar]
+            print(f"m, {(100 + width_ratio)//25=}")
+            # 100(base) / 20(days in month) = 5
+            ticket_width_ratio = 5 * ((100 + width_ratio)//25)
+            width_ratio = 100 * (100 + width_ratio)//25
+            sch_type = "m"
+            print(f"m, {ticket_width_ratio=}")
+            print(f"m, {width_ratio=}")
+        elif width_ratio <= 0:
+            l1_calendar = [begin_day + datetime.timedelta(weeks=i) for i in range(100)]
+            txt = [d.strftime("%m/%d") for d in l1_calendar]
+            # 100(base) / 5(days/week) = 20
+            ticket_width_ratio = 20 * ((50 + width_ratio)//25)
+            width_ratio = 100 * (50 + width_ratio)//25
+            print(f"w, {ticket_width_ratio=}")
+            print(f"w, {width_ratio=}")
+            sch_type = "w"
+        elif width_ratio <= 50:
+            l1_calendar = [begin_day + datetime.timedelta(days=i) for i in range(100)]
+            txt = [d.strftime("%d") for d in l1_calendar if d.weekday() < 5]
+            ticket_width_ratio = width_ratio
+            sch_type = "d"
+        else:
+            l1_calendar = [begin_day + datetime.timedelta(days=i) for i in range(100)]
+            txt = [d.strftime("%m/%d(%a)") for d in l1_calendar if d.weekday() < 5]
+            ticket_width_ratio = width_ratio
+            sch_type = "d"
+
         self.l1_grp_cal.erase()
+        font_size = min(self.params.font_size * width_ratio // 100, self.params.font_size)
+        font_size = self.params.font_size
         for i, t in enumerate(txt):
-            self.l1_grp_cal.draw_text(t, (50+i*100, 50), color=self.theme.text, font=(self.params.font, self.params.font_size))
-            self.l1_grp_cal.draw_line((i*100, 0), (i*100, 100), color=self.theme.text, width=1)
+            self.l1_grp_cal.draw_text(t, (width_ratio//2+i*width_ratio, 50), color=self.theme.text, font=(self.params.font, font_size))
+            self.l1_grp_cal.draw_line((i*width_ratio, 0), (i*width_ratio, 100), color=self.theme.text, width=1)
         left_edge = self.sizes.graph_top_right_w
         self.l1_grp_cal2.draw_text("tickets", (left_edge // 2, 50), color=self.theme.text, font=(self.params.font, self.params.font_size))
         self.l1_grp_cal2.draw_line((left_edge, 0), (left_edge, 100), color=self.theme.text, width=1)
@@ -355,18 +386,37 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
             self.l1_grp[prj_id].erase()
             self.l1_grp2[prj_id].erase()
             self.l1_grp2[prj_id].draw_line((left_edge, 0), (left_edge, 100), color=self.theme.graph_line, width=3)
-            todo_tmp = todo_ticket_pos_df[todo_ticket_pos_df["prj"] == prj]
-            often_tmp = often_ticket_pos_df[often_ticket_pos_df["prj"] == prj]
-
+            todo_tmp = todo_ticket_pos_df[todo_ticket_pos_df["prj"] == prj].copy()
+            often_tmp = often_ticket_pos_df[often_ticket_pos_df["prj"] == prj].copy()
+            todo_tmp["begin_pos"] = (todo_tmp["begin_pos"] * ticket_width_ratio) // 100
+            todo_tmp["end_pos"] = (todo_tmp["end_pos"] * ticket_width_ratio) // 100
+            prev_task = ""
+            i = -1
             # todo
-            for i, idx in enumerate(todo_tmp.index):
+            for idx in todo_tmp.index:
+                i += 1
                 items = todo_tmp.loc[idx]
                 x0, x1 = int(items["begin_pos"]), int(items["end_pos"])
                 y0 = -(i % 3) * 30 + 80
                 color = items["Color"] if items["Color"] else self.theme.graph_unknown
+                if sch_type == "m":
+                    if items["Task"] == prev_task:
+                        tt1 = ""
+                        i -= 1
+                        y0 =  -(i % 3) * 30 + 80
+                    else:
+                        tt1 = f" {items['Task']}"
+                    tt2 = ""
+                    prev_task = items["Task"]
+                elif sch_type == "w" or width_ratio <= 50:
+                    tt1 = f" {items['Task']}"
+                    tt2 = f" {items['Ticket']}"
+                else:
+                    tt1 = f" {items['Task']}-{items['Ticket']}"
+                    tt2 = f" {items['In_charge']} ({items['Man_hour_reg']:2.2f}/{items['Update_Estimation']:2.2f})"
                 self.l1_grp[prj_id].draw_rectangle((x0, y0-15),(x1, y0+15), fill_color=color, line_color=color, line_width=1)
-                self.l1_grp[prj_id].draw_text(f" {items['Task']}-{items['Ticket']}", (x0, y0+7), color=self.theme.graph_text, font=(self.params.font, self.params.font_size), text_location=sg.TEXT_LOCATION_LEFT)
-                self.l1_grp[prj_id].draw_text(f" {items['In_charge']} ({items['Man_hour_reg']:2.2f}/{items['Update_Estimation']:2.2f})", (x0, y0-7), color=self.theme.graph_text, font=(self.params.font, self.params.font_size-2), text_location=sg.TEXT_LOCATION_LEFT)
+                self.l1_grp[prj_id].draw_text(tt1, (x0, y0+7), color=self.theme.graph_text, font=(self.params.font, self.params.font_size), text_location=sg.TEXT_LOCATION_LEFT)
+                self.l1_grp[prj_id].draw_text(tt2, (x0, y0-7), color=self.theme.graph_text, font=(self.params.font, self.params.font_size-2), text_location=sg.TEXT_LOCATION_LEFT)
                 
                 color = self.theme.alert if todo_tmp.loc[idx, "over"] else self.theme.graph_vertical_line
                 width = 5 if todo_tmp.loc[idx, "over"] else 1
@@ -410,6 +460,28 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
             self.values[f"-hd_cbx_{i:02d}-"] = flag_exist
             self.window[f"-hd_cbx_{i:02d}-"].update(flag_exist)
         self.show_prj_boxes_as_chk_box()
+
+
+    def update_l1_size_text(self, up_down):
+        d2p = {"monthly 1":-75, "monthly 2":-50, "weekly 1":-25, "weekly 2":0}
+        for i in range(1, 13):
+            d2p[f"{i*25}%"] = i*25
+        p2d = {v:k for k, v in d2p.items()}
+        width_text = self.window["-l1_txt_00-"].get()
+        width = d2p[width_text]
+        new_width = width + up_down * 25
+        if -75 <= new_width <= 300:
+            width = new_width
+        self.window["-l1_txt_00-"].update(p2d[width])
+        return width
+
+    def enlarge_l1_chart(self):
+        width = self.update_l1_size_text(1)
+        self.l1_chart_draw(width)
+    
+    def shrink_l1_chart(self):
+        width = self.update_l1_size_text(-1)
+        self.l1_chart_draw(width)
 
 
     # l2 =======================================================================
@@ -2056,11 +2128,12 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         Args:
             user (str): selected user name
         """
-        time_to_pix = 100 / self.params.hour_in_date        
+        time_to_pix = 100 / self.params.hour_in_date
         tmp_pos = 0
         for idx in tmp_df.index:
             tmp_df.loc[idx, "begin_pos"] = tmp_pos
-            tmp_pos += tmp_df.loc[idx, "Update_Estimation"] * time_to_pix
+            ticket_hour = max(tmp_df.loc[idx, "Update_Estimation"] - tmp_df.loc[idx, "Man_hour_reg"], 0.5)
+            tmp_pos += ticket_hour * time_to_pix
             tmp_df.loc[idx, "end_pos"] = tmp_pos
 
             # over due date ticket turn on the over flag
