@@ -284,10 +284,12 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
 
         # Branch processing
         if event[:-1] in self.params.status:
-            self.prj_dfs[in_charge].loc[ticket_id, "Status"] = event[:-1]
             if event[:-1] == "Done":
-                self.get_reason_of_over_estimation_tickets(ticket_ids=[ticket_id], shorter=True)
-        
+                ret = self.get_reason_of_over_estimation_tickets(ticket_ids=[ticket_id], shorter=True)
+                if not ret:
+                    return
+            self.prj_dfs[in_charge].loc[ticket_id, "Status"] = event[:-1]
+
         r_menu = ["Scheduling_", "Edit_", "New ticket FROM this_", "New ticket TO this_"]
         if event == r_menu[0]:
             if self.values["-rt_grp_00-"] != "r2":
@@ -1809,7 +1811,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         if not prj1 or not prj2 or not task:
             return
         df = self.prj_dfs[self.params.user_name]
-        df = df.query(f"Project1 == '{prj1}'and Project2 == '{prj2}' and Task == '{task}'")
+        df = df.query(f"Project1 == '{prj1}'and Project2 == '{prj2}' and Task == '{task}' and Status == 'ToDo'")
         df = df.sort_values("Due_date")
         self.task_updating_df = self._topological_sort_tickets_in_single_task(df)
         df = self.task_updating_df[self.params.ticket_maker_table]
@@ -1944,8 +1946,8 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         for idx in ids:
             if idx not in self.prj_dfs[self.params.user_name].index:
                 new_ids.append(idx)
-        if not len(new_ids):
-            return
+        # if not len(new_ids):
+        #     return
 
         msg = f"Update {self.task_updating_df.loc[ids[0], 'Project1']} - {self.task_updating_df.loc[ids[0], 'Project2']} - {self.task_updating_df.loc[ids[0], 'Task']}\n"
         for idx in new_ids:
@@ -2327,6 +2329,8 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
             msg = "\r\n".join(msg)
             reason_txt = False
             reason_txt = sg.popup_get_text(message=msg, title="Please input reason", default_text=self.prj_dfs[name].loc[ticket_id, "Comment"], )
-            print("reason", reason_txt)
             if reason_txt:
                 self.prj_dfs[name].loc[ticket_id, "Comment"] = reason_txt
+            if reason_txt == None:
+                return False
+            return True
