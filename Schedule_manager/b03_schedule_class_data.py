@@ -46,7 +46,8 @@ class SettingParameters:
         default_factory=lambda:["ToDo", "Done", "Pending", "Often"])
     ticket_maker_table : List[str] = field(
         default_factory=lambda:["Ticket", "Estimation", "Man_hour_reg", "Ready_date", "Due_date"])
-
+    default_task_set : List[str] = field(
+        default_factory=lambda:["meeting - 2 - Often", "gathering info - 2 - Often", "other - 2 - Often"])
 
 
 @dataclass
@@ -113,6 +114,7 @@ class WindowTheme:
     graph_background : str = "#7f7f7f"
     graph_line : str = "#eeeeee"
     graph_vertical_line : str = "#8f8f8f"
+    graph_vertical_line_due : str = "#8f8fde"
     graph_text : str = "#eeeeee"
     graph_unknown : str = "#505050"
     schedule_table1 : str = "#888888"

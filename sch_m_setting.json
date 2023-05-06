@@ -16,7 +16,12 @@
             "できる社員"
         ],
         "auto_priority_activate": true,
-        "back_up_at_local": true
+        "back_up_at_local": true,
+        "default_task_set": [
+            "会議 - 2 - Often",
+            "情報収集 - 2 - Often",
+            "その他 - 2 - Often"
+        ]
     },
     "size": {
         "window_w" : 1600,
@@ -64,6 +69,7 @@
     "graph_background" :  "#afabab",
     "graph_line" :  "#565656",
     "graph_vertical_line" :  "#8f8f8f",
+    "graph_vertical_line_due" :  "#8f8fde",
     "graph_text" :  "#222222",
     "graph_unknown" :  "#dfdfd0",
     "schedule_table1" :  "#c9c9c9",

@@ -63,7 +63,7 @@ def gui_main(sch_m):
 
     event, pos, item, eid = sch_m.parse_event()
     if event and "MV" not in event:
-        logger.debug(event)
+        sch_m.log("debug", event)
 
     if event == sg.WIN_CLOSED: # if user closes window or clicks cancel
         return False
@@ -130,6 +130,8 @@ def gui_main(sch_m):
                 sch_m.shrink_l1_chart()
             if eid == 1:
                 sch_m.enlarge_l1_chart()
+        if item == "cbx":
+            sch_m.l1_chart_draw()
         if item[:3] == "grp":
             if item == "grp" or item == "grp2":
                 sch_m.schedule_ticket_to_daily_table()
@@ -287,6 +289,17 @@ def gui_main(sch_m):
             if eid == 3:
                 sch_m.log_button_3()
         return True
+
+    if pos == "r9":
+        if item == "btn":
+            if eid == 0:
+                sch_m.add_r9_table_data_into_dfs()
+            if eid == 1:
+                sch_m.multiline_item_into_table_r9()
+            if eid == 2:
+                sch_m.write_prj12_to_r9_multi()
+            if eid == 3:
+                sch_m.set_default_r9_multi()
 
     return True
 

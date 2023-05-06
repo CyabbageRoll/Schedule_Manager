@@ -30,6 +30,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
 
     def __init__(self, logger):
 
+        self.log_msg = []
         self.logger = logger
         self.logger.info("ScheduleManage Class start init")
         self.setting_file = r"../sch_m_setting.json"
@@ -50,6 +51,17 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         self.app_schedule = [""] * self.params.daily_table_rows
         self.task_updating_df = self.prj_dfs[self.params.user_name].iloc[:1]
         self.r2_table_click_start = []
+
+    def log(self, log_type="info", msg=""):
+        if log_type == "info":
+            self.logger.info(msg)
+        if log_type == "debug":
+            self.logger.debug(msg)
+        self.log_msg.append(msg)
+        self.log_msg = self.log_msg[-10:]
+        txt_msg = "\n".join(self.log_msg)
+        print(txt_msg)
+        self.window["-r8_txt_01-"].update(txt_msg)
 
     def _initialize(self):
 
@@ -319,53 +331,44 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
             # df = self.prj_dfs[]
             self.add_follow_up_list(mouse_on_prj)
 
-
         self.update_tabs()
 
 
-    def l1_chart_draw(self, width_ratio=100):
+    def l1_chart_draw(self):
         """
         tickets belongs to activated user are arranged in each project graph area
         tickets xy coordinates are calculated with self._calc_ticket_position.
         """
-
+        width_ratio = self.update_l1_size_text(0)
         name = self._get_activated_member()
         self._priority_update(name=name)
         tmp_df = self._create_temporary_df_for_cal_position(self.prj_dfs[name], "ToDo")
         todo_ticket_pos_df = self._calc_ticket_position(tmp_df)
         tmp_df = self._create_temporary_df_for_cal_position(self.prj_dfs[name], "Often")
         often_ticket_pos_df = self._calc_ticket_position(tmp_df)
+        time_to_pix = 100 / self.params.hour_in_date
         # draw calendar top of the L1 tab
         begin_day = datetime.date.today()
         if width_ratio <= -50:
             l1_calendar = [begin_day + relativedelta(months=i) for i in range(100)]
             txt = [d.strftime("%m") for d in l1_calendar]
-            print(f"m, {(100 + width_ratio)//25=}")
             # 100(base) / 20(days in month) = 5
             ticket_width_ratio = 5 * ((100 + width_ratio)//25)
             width_ratio = 100 * (100 + width_ratio)//25
-            sch_type = "m"
-            print(f"m, {ticket_width_ratio=}")
-            print(f"m, {width_ratio=}")
         elif width_ratio <= 0:
             l1_calendar = [begin_day + datetime.timedelta(weeks=i) for i in range(100)]
             txt = [d.strftime("%m/%d") for d in l1_calendar]
             # 100(base) / 5(days/week) = 20
             ticket_width_ratio = 20 * ((50 + width_ratio)//25)
             width_ratio = 100 * (50 + width_ratio)//25
-            print(f"w, {ticket_width_ratio=}")
-            print(f"w, {width_ratio=}")
-            sch_type = "w"
         elif width_ratio <= 50:
             l1_calendar = [begin_day + datetime.timedelta(days=i) for i in range(100)]
             txt = [d.strftime("%d") for d in l1_calendar if d.weekday() < 5]
             ticket_width_ratio = width_ratio
-            sch_type = "d"
         else:
             l1_calendar = [begin_day + datetime.timedelta(days=i) for i in range(100)]
             txt = [d.strftime("%m/%d(%a)") for d in l1_calendar if d.weekday() < 5]
             ticket_width_ratio = width_ratio
-            sch_type = "d"
 
         self.l1_grp_cal.erase()
         font_size = min(self.params.font_size * width_ratio // 100, self.params.font_size)
@@ -401,27 +404,39 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
                 x0, x1 = int(items["begin_pos"]), int(items["end_pos"])
                 y0 = -(i % 3) * 30 + 80
                 color = items["Color"] if items["Color"] else self.theme.graph_unknown
-                if sch_type == "m":
+                tt1, tt2 = f" {items['Task']}", ""
+                if self.values["-l1_cbx_04-"]: # combine
                     if items["Task"] == prev_task:
-                        tt1 = ""
+                        tt1, tt2 = "", ""
                         i -= 1
                         y0 =  -(i % 3) * 30 + 80
-                    else:
-                        tt1 = f" {items['Task']}"
-                    tt2 = ""
                     prev_task = items["Task"]
-                elif sch_type == "w" or width_ratio <= 50:
-                    tt1 = f" {items['Task']}"
-                    tt2 = f" {items['Ticket']}"
                 else:
-                    tt1 = f" {items['Task']}-{items['Ticket']}"
-                    tt2 = f" {items['In_charge']} ({items['Man_hour_reg']:2.2f}/{items['Update_Estimation']:2.2f})"
+                    if self.values["-l1_cbx_01-"]: # in charge
+                        tt2 += f" {items['In_charge']}"
+                    if self.values["-l1_cbx_02-"]: # hour
+                        tt2 += f" ({items['Man_hour_reg']:2.2f}/{items['Update_Estimation']:2.2f})"
+                    if self.values["-l1_cbx_03-"]: # ticket
+                        if tt2:
+                            tt1 += f"-{items['Ticket']}"
+                        else:
+                            tt2 = f" {items['Ticket']}"
+                used_hour = items["Man_hour_reg"] * time_to_pix * ticket_width_ratio // 100
+                xp = max(0, x0 - used_hour)
+                self.l1_grp[prj_id].draw_rectangle((xp, y0-15), (x0, y0+15), line_color=color, line_width=1)
                 self.l1_grp[prj_id].draw_rectangle((x0, y0-15),(x1, y0+15), fill_color=color, line_color=color, line_width=1)
                 self.l1_grp[prj_id].draw_text(tt1, (x0, y0+7), color=self.theme.graph_text, font=(self.params.font, self.params.font_size), text_location=sg.TEXT_LOCATION_LEFT)
                 self.l1_grp[prj_id].draw_text(tt2, (x0, y0-7), color=self.theme.graph_text, font=(self.params.font, self.params.font_size-2), text_location=sg.TEXT_LOCATION_LEFT)
-                
-                color = self.theme.alert if todo_tmp.loc[idx, "over"] else self.theme.graph_vertical_line
-                width = 5 if todo_tmp.loc[idx, "over"] else 1
+                # color set depend on due date
+                if todo_tmp.loc[idx, "over"] == None:
+                    color = self.theme.graph_vertical_line
+                    width = 1
+                elif todo_tmp.loc[idx, "over"] == False:
+                    color = self.theme.graph_vertical_line_due
+                    width = 3
+                else:
+                    color = self.theme.alert
+                    width = 5
                 self.l1_grp[prj_id].draw_line((x1, 0), (x1, 100), color=color, width=width)
 
                 if self.graph_positions_todo[prj_id][-1] >= x0:
@@ -479,11 +494,11 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
 
     def enlarge_l1_chart(self):
         width = self.update_l1_size_text(1)
-        self.l1_chart_draw(width)
+        self.l1_chart_draw()
     
     def shrink_l1_chart(self):
         width = self.update_l1_size_text(-1)
-        self.l1_chart_draw(width)
+        self.l1_chart_draw()
 
 
     # l2 =======================================================================
@@ -2064,6 +2079,135 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         return
 
 
+    # r9 =======================================================================
+    def add_r9_table_data_into_dfs(self):
+
+        tickets = self.window["-r9_tbl_00-"].get()
+        new_tickets_df = []
+        if not sg.popup_ok_cancel("add table tickets") == "OK":
+            return
+
+        # items = [prj1, prj2, task, ticket_name, estimation, ready_date, due_date]
+        # ticket_items = [prj1, prj2, task, ticket, estimation, due_date, status]
+        for ticket_items in tickets:
+            items = ticket_items[:5] + [""]*2
+            items[4] = float(items[4])
+            items[6] = "" if ticket_items[5] == "-" else ticket_items[5]
+            print(f"{items=}")
+            input_df = self._add_tickets_info_into_stored_df(items)
+            input_df["Status"] = ticket_items[6]
+            new_tickets_df.append(input_df)
+            print(input_df["Update_Estimation"])
+            print(input_df["Estimation"])
+            print(input_df["Due_date"])
+        for new_df in new_tickets_df:
+            self.prj_dfs[self.params.user_name] = self.prj_dfs[self.params.user_name].append(new_df)
+        self.update_tabs()
+
+
+    def multiline_item_into_table_r9(self):
+        tickets, mul_msg = self.parse_multiline_r9()
+        self.window["-r9_mul_00-"].update(mul_msg)
+        self.window["-r9_tbl_00-"].update(values=tickets)
+    
+    def parse_multiline_r9(self):
+        mul = self.values["-r9_mul_00-"]
+        mul = mul.split("\n")
+        tickets = []
+        msg = []
+        for ticket_line in mul:
+            if not len(ticket_line):
+                continue
+            if ticket_line[0] == "#":
+                continue
+            msg.append(ticket_line)
+            t, m = self.ticket_line_to_items(ticket_line)
+            if t:
+                tickets.append(t)
+            if m:
+                msg.append(m)
+        mul_msg = "\n".join(msg)
+        tickets = self.convert_ticket_items(tickets)
+        return tickets, mul_msg
+
+    def convert_ticket_items(self, tickets):
+        converted_tickets = []
+        for ticket_items in tickets:
+            ticket_items += [""]*7
+            ticket_items[5] = "" if ticket_items[5] == "-" else ticket_items[5]
+            ticket_items[6] = ticket_items[6] if ticket_items[6] else "ToDo"
+            converted_tickets.append(ticket_items[:7])
+        return converted_tickets
+
+    def ticket_line_to_items(self, ticket_line):
+        if not ticket_line:
+            return None, None
+        checker = {0:self.is_prj1_exist, 1:self.is_prj2_exist, 2:self.is_longer_1string, 3:self.is_longer_1string,
+                   4:self._can_convert_float025, 5:self.is_correct_due_date_input, 6:self.is_status}
+        pos = {0:"Project1", 1:"Project2", 2:"Task", 3:"Ticket", 4:"Estimation hour", 5:"Due date", 6:"Status"}
+        ticket_line = ticket_line.split(" ")
+        ticket_items = ticket_line[:7]
+        for i, item in enumerate(ticket_items):
+            if not checker[i](item):
+                msg = f"# {pos[i]} is something wrong !"
+                return None, msg
+        if i < 4:
+            return None, "#Prj1, Prj2, Task, Ticket, Estimation hour must be inputted"
+        return ticket_items, None
+
+    def is_prj1_exist(self, prj1):
+        if prj1 in self.dic_prj1_2.keys():
+            self.tmp_prj1 = prj1
+            return True
+        return False
+    
+    def is_prj2_exist(self, prj2):
+        if prj2 in self.dic_prj1_2[self.tmp_prj1]:
+            return True
+        return False
+    
+    def is_longer_1string(self, t):
+        if len(t):
+            return True
+        return False
+    
+    def is_correct_due_date_input(self, dd):
+        if dd == "-" or self._can_convert_datetime(dd):
+            return True
+        return False
+
+    def is_status(self, status):
+        print(f"{self.params.status=}")
+        if status in self.params.status:
+            return True
+        return False
+
+    def write_prj12_to_r9_multi(self):
+        mul_msg = ""
+        for prj1 in self.dic_prj1_2.keys():
+            for prj2 in self.dic_prj1_2[prj1]:
+                mul_msg += f"{prj1} {prj2} \n"
+        self.window["-r9_mul_00-"].update(mul_msg)
+    
+    def set_default_r9_multi(self):
+        mul_msg = self.values["-r9_mul_00-"]
+        mul = mul_msg.split("\n")
+        prj1 = None
+        for mul_line in mul:
+            mul_line = mul_line.split(" ")
+            if len(mul_line) < 2:
+                continue
+            prj1, prj2 = mul_line[:2]
+            if prj2 in self.dic_prj1_2.get(prj1, []):
+                break
+            prj1, prj2 = None, None
+        if prj1:
+            for dt in self.params.default_task_set:
+                mul_msg += f"\n{prj1} {prj2} {dt}"
+        else:
+            mul_msg += "# clicked samples button. but prj1, prj2 are not inputted\n"
+        self.window["-r9_mul_00-"].update(mul_msg)
+
 # ==========================================================================
 # internal use functions
 #===========================================================================
@@ -2116,7 +2260,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         tmp_df = df[df["Status"] == status].copy()
         tmp_df["begin_pos"] = 0
         tmp_df["end_pos"] = 0
-        tmp_df["over"] = False
+        tmp_df["over"] = None
         tmp_df["prj"] = tmp_df["Project1"] + "-" + tmp_df["Project2"]
         tmp_df = tmp_df.sort_values("Priority")
         return tmp_df
@@ -2141,6 +2285,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
             # over due date ticket turn on the over flag
             due_date = tmp_df.loc[idx, "Due_date"]
             if due_date:
+                tmp_df.loc[idx, "over"] = False
                 due_date = datetime.datetime.strptime(due_date, r"%Y/%m/%d").date()
                 today = datetime.date.today()
                 remaining_days = self._business_days(today, due_date) + 1

@@ -83,7 +83,7 @@ class ScheduleManageIO:
 
     def save_files(self, popup=True):
         """save prj, sch, trk dataframe(s) at user specified location"""
-        self.logger.info("save_files start")
+        self.log("info", "save_files start")
         self._save_prj_file()
         self._save_daily_schedule_file()
         self._save_man_hour_tracker_file()
@@ -91,7 +91,7 @@ class ScheduleManageIO:
         self._save_personal_memo()
         if popup:
             sg.popup_no_buttons("Saved", auto_close=True, auto_close_duration=0.5)
-        self.logger.info("save_files done")
+        self.log("info", "save_files done")
 
     def reload_files(self, popup=True):
         """read prj, sch, trk dataframe(s) from user specified location"""

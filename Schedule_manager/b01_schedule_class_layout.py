@@ -87,7 +87,14 @@ class ScheduleManageLayout:
     def _l1_layout(self):
 
         # header
-        btn = [sg.Button("-", key="-l1_btn_00-", size=(2,1)), sg.Button("+", key="-l1_btn_01-", size=(2,1)), sg.Text("100%", key="-l1_txt_00-")]
+        hed = []
+        hed += [sg.Text("100%", key="-l1_txt_00-")]
+        hed += [sg.Button("-", key="-l1_btn_00-", size=(2,1))]
+        hed += [sg.Button("+", key="-l1_btn_01-", size=(2,1))]
+        hed += [sg.Checkbox(text="In Charge", default=False, key="-l1_cbx_01-", size=(self.sizes.header_chk_box_w, self.sizes.header_chk_box_h), p=0, enable_events=True)]
+        hed += [sg.Checkbox(text="hours", default=True, key="-l1_cbx_02-", size=(self.sizes.header_chk_box_w, self.sizes.header_chk_box_h), p=0, enable_events=True)]
+        hed += [sg.Checkbox(text="Ticket", default=True, key="-l1_cbx_03-", size=(self.sizes.header_chk_box_w, self.sizes.header_chk_box_h), p=0, enable_events=True)]
+        hed += [sg.Checkbox(text="Combine Task", default=False, key="-l1_cbx_04-", size=(self.sizes.header_chk_box_w, self.sizes.header_chk_box_h), p=0, enable_events=True)]
 
         # graph size
         gbl = (0, 0)
@@ -105,7 +112,7 @@ class ScheduleManageLayout:
         self.l1_frm = [[sg.Frame(p, [[g2, g]], key=f"-l1_frm_{i:02d}-", border_width=0)] for i, (p, g, g2) in enumerate(zip(self.prj, self.l1_grp, self.l1_grp2))]
         self.l1_clm = [sg.Column(self.l1_frm_cal + self.l1_frm, scrollable=True, vertical_scroll_only=False, size=(self.sizes.left_tab_group_w, self.sizes.left_tab_group_h))]
 
-        l1 = [sg.Tab("Project", [btn, self.l1_clm], key="-l1_tbg_00-")]
+        l1 = [sg.Tab("Project", [hed, self.l1_clm], key="-l1_tbg_00-")]
         return l1
 
 
@@ -201,13 +208,14 @@ class ScheduleManageLayout:
         r1 = self._r1_layout()
         r2 = self._r2_layout()
         r3 = self._r3_layout()
-        r4 = self._r4_layout()
+        # r4 = self._r4_layout()
         r5 = self._r5_layout()
         r6 = self._r6_layout()
         r7 = self._r7_layout()
         r8 = self._r8_layout()
+        r9 = self._r9_layout()
 
-        rt = [sg.TabGroup([r1, r2, r3, r4, r5, r6, r7, r8], size=(self.sizes.right_tab_group_w, self.sizes.right_tab_group_h), enable_events=True, key="-rt_grp_00-")]
+        rt = [sg.TabGroup([r1, r2, r3, r5, r6, r9, r7, r8], size=(self.sizes.right_tab_group_w, self.sizes.right_tab_group_h), enable_events=True, key="-rt_grp_00-")]
         return rt
 
 
@@ -348,7 +356,7 @@ class ScheduleManageLayout:
         r6_txt2 = [sg.Text(' "-" is regarded None.', pad=0)]
         r6_txt3 = [sg.Text(" date should be yyyy/mm/dd.", pad=0)]
 
-        r6 = [sg.Tab("Task", [r6_btn1, r6_txt, self.r6_inp, r6_tbl, r6_btn2[2:], r6_txt1, r6_txt2+r6_txt3, r6_mul], key="r6")]
+        r6 = [sg.Tab("Task-Tickets", [r6_btn1, r6_txt, self.r6_inp, r6_tbl, r6_btn2[2:], r6_txt1, r6_txt2+r6_txt3, r6_mul], key="r6")]
         return r6
 
 
@@ -356,7 +364,7 @@ class ScheduleManageLayout:
 
         s = (self.sizes.right_team_box_w * 2, self.sizes.right_team_box_h * 2)
         r7_mul = [sg.Multiline("", size=s, key="-r7_mul_00-", enable_events=True)]
-        r7 = [sg.Tab("Memo", [r7_mul], key = "-r7")] 
+        r7 = [sg.Tab("Memo", [r7_mul], key = "r7")] 
         return r7
 
     def _r8_layout(self):
@@ -367,9 +375,25 @@ class ScheduleManageLayout:
         r8_btn3 = [sg.Button("log3", size=(self.sizes.right_button_w, self.sizes.right_button_h), key="-r8_btn_03-")]
         s = (self.sizes.right_team_box_w * 2, self.sizes.right_team_box_h * 2)
         r8_txt = [sg.Text("", size=s, key="-r8_txt_00-", enable_events=True)]
-        r8 = [sg.Tab("log", [r8_btn0 + r8_btn1 + r8_btn2 + r8_btn3, r8_txt], key = "-r8")] 
+        r8_txt1 = [sg.Text("", size=s, key="-r8_txt_01-", enable_events=True)]
+        r8 = [sg.Tab("log", [r8_btn0 + r8_btn1 + r8_btn2 + r8_btn3, r8_txt, r8_txt1], key = "r8")] 
         return r8
 
+    def _r9_layout(self):
+        r9_btn0 = [sg.Button("Apply", size=(self.sizes.right_button_w, self.sizes.right_button_h), key="-r9_btn_00-")]
+        r9_btn1 = [sg.Button("Add", size=(self.sizes.right_button_w, self.sizes.right_button_h), key="-r9_btn_01-")]
+        r9_btn1 += [sg.Button("Prj12", size=(self.sizes.right_button_w, self.sizes.right_button_h), key="-r9_btn_02-")]
+        r9_btn1 += [sg.Button("Samples", size=(self.sizes.right_button_w, self.sizes.right_button_h), key="-r9_btn_03-")]
+        tbl_headings = ["Prj1", "Prj2", "Task", "Ticket", "Estimation", "Due Date", "Status"]
+        tbl_tmp = [["", "", "", "", "", "", ""]] * 100
+        r9_tbl = [sg.Table(tbl_tmp, headings=tbl_headings, auto_size_columns=False, col_widths=[10,10,10,12,6,12,10], row_height=self.sizes.tbl_row_hight, num_rows=20, justification="center", enable_events=False, text_color=self.theme.text_table, background_color=self.theme.table_background, key="-r9_tbl_00-")]
+        r9_mul = [sg.Multiline("", size=(self.sizes.right_team_box_w, self.sizes.right_team_box_h), key="-r9_mul_00-")]
+        msg = "prj1 and 2 must already exist.\n input new ticket data 'prj1', 'prj2', 'task', 'ticket', 'estimation' with space." 
+        msg += "\n'due date' and 'status' are optional. if status is none, status is set 'ToDo'."
+        msg += "\nif input status but not define 'due date', input '-' at 'due date' column."
+        r9_txt1 = [sg.Text(msg, pad=0)]
+        r9 = [sg.Tab("Prj-Tickets", [r9_btn0, r9_tbl, r9_btn1, r9_txt1, r9_mul], key="r9")]
+        return r9
 
     # %% =======================================================================
     # other
