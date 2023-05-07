@@ -51,6 +51,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         self.app_schedule = [""] * self.params.daily_table_rows
         self.task_updating_df = self.prj_dfs[self.params.user_name].iloc[:1]
         self.r2_table_click_start = []
+        self.r1_ticket_connections = {"p":[], "n":[]}
 
     def log(self, log_type="info", msg=""):
         if log_type == "info":
@@ -153,6 +154,9 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         if event[-1] == ">":
             # right click menu of r2 table was clicked
             return event, "r2", "right_menu", event[-5:-1]
+        if event[-1] == ":":
+            # right click menu of r1 table was clicked
+            return event, "r1", "right_menu_tbl", event[7:11]
         if event[0] != "-" or event[-1] != "-":
             return event, None, None, 0
         
@@ -302,30 +306,30 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
                     return
             self.prj_dfs[in_charge].loc[ticket_id, "Status"] = event[:-1]
 
-        r_menu = ["Scheduling_", "Edit_", "New ticket FROM this_", "New ticket TO this_"]
+        r_menu = ["Scheduling_", "Edit_", "Prev_Ticket_", "Next_Ticket_"]
         if event == r_menu[0]:
             if self.values["-rt_grp_00-"] != "r2":
                 print("daily tab is not activated")
                 return
             if self._get_activated_member() != self.params.user_name:
                 print("you can update only your schedule. Other user's daily table is shown now")
+                # TODO : printはpopupに変更
                 return
             if self._update_sch_dfs(ticket_id):
                 self.r2_daily_schedule_update()
 
-        if event in r_menu[1:4]:
+        if event == r_menu[1]:
             self.display_values_in_df_to_r1(mouse_on_prj)
             self.display_values_in_df_to_r6(mouse_on_prj)
             self.values["-r1_cbx_00-"] = True
             self.window["-r1_cbx_00-"].update(self.values["-r1_cbx_00-"])
-            if event in r_menu[2:4]:
-                self.values["-r1_inp_03-"] = ""
-                self.window["-r1_inp_03-"].update("")
-                select_row = [i for i, tid in enumerate(self.r1_tables[1]) if tid == ticket_id]
-            if event == r_menu[2]:
-                self.window["-r1_tbl_02-"].update(select_rows=select_row)
-            if event == r_menu[3]:
-                self.window["-r1_tbl_03-"].update(select_rows=select_row)
+
+        if event in r_menu[2:4]:
+            key = event[0].lower()
+            ticket_list = self.r1_ticket_connections[key]
+            ticket_list.append(ticket_id)
+            self.r1_ticket_connections[key] = list(set(ticket_list))
+            self.display_connections_dic_to_r1_table()
 
         if event == "Follow_up_":
             # df = self.prj_dfs[]
@@ -1041,7 +1045,34 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
             if errors[0] == 1 or errors[1] == 1:
                 return -1
         return 0
+    
 
+    def is_valid_prev_next_tickets(self, ticket_id):
+        p_tickets = self.r1_ticket_connections["p"]
+        n_tickets = self.r1_ticket_connections["n"]
+        
+        both_included = list(set(p_tickets) & set(n_tickets))
+        if both_included:
+            tid = both_included[0]
+            c, ds = self._get_is_ticket_and_series_from_ticket_id(tid)
+            if not c:
+                sg.popup_ok("something is wrong")
+                return False
+            msg = f"{ds['Project1']}-{ds['Project2']}-{ds['Task']}-{ds['Ticket']}"
+            sg.popup_ok(msg + "\nis in both prev_tickets and next_tickets")
+            return False
+
+        m = ""
+        if ticket_id in p_tickets:
+            m += " prev_tickets"
+        if ticket_id in n_tickets:
+            m += " next_tickets"
+        if m:
+            sg.popup_ok(f"ticket itself is in {m}")
+            return False
+        
+        return True
+    
 
     def create_ticket_as_r1(self):
         """ticket contents update or create new
@@ -1052,6 +1083,8 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         if ep > 0:
             return
 
+        if not self.is_valid_prev_next_tickets(""):
+            return
         # create new ticket dataframe from r1 input panel
         input_df = self.update_df_as_per_r1_inputs()
         ticket_id = input_df.index[0]
@@ -1059,7 +1092,10 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
             
         if in_charge == self.params.user_name:
             self.prj_dfs[in_charge] = self.prj_dfs[in_charge].append(input_df)
-            self.update_prev_next_task(input_df)
+            update_items = {}
+            update_items["Prev_task"] = ["", input_df["Prev_task"].item()]
+            update_items["Next_task"] = ["", input_df["Next_task"].item()]
+            self.update_prev_next_task(ticket_id, update_items)
 
             sg.popup_no_buttons("new ticket has been added", auto_close=True, auto_close_duration=1)
 
@@ -1120,6 +1156,8 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         if input_df.loc[ticket_id, "In_charge"] != self.params.user_name:
             sg.popup_ok("please create new ticket when update ticket in charge")
             return
+        if not self.is_valid_prev_next_tickets(ticket_id):
+            return
 
         # popup. user update input boxes, user can not know current values. so confirm the update contents 
         update_items = {} # column : [previous, new]
@@ -1143,7 +1181,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
                 flag_order_changed = True
 
         if flag_order_changed:
-            self.update_prev_next_task(input_df)
+            self.update_prev_next_task(ticket_id, update_items)
         self.update_tabs()
         self._r1_pre_next_ticket_table_update()
         
@@ -1210,37 +1248,41 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         self.update_tabs()
 
 
-    def update_prev_next_task(self, input_df):
+    def update_prev_next_task(self, ticket_id, update_items):
         """update the tickets which are selected as previous or next ticket of new ticket 
            add new ticket id to "next ticket" of "previous ticket".
            add new ticket id to "previous ticket" of "next ticket".
         Args:
             input_df (pandas dataframe): update or new ticket dataframe
         """
-        new_ticket = input_df.index.item()
-        prev_tickets = input_df.loc[new_ticket, "Prev_task"].split(",")
-        next_tickets = input_df.loc[new_ticket, "Next_task"].split(",")
-        name = input_df["In_charge"].item()
 
-        for prev_ticket in prev_tickets:
-            if prev_ticket not in self.prj_dfs[name].index.values.tolist():
-                continue
-            tmp = self.prj_dfs[name].loc[prev_ticket, "Next_task"]
-            tmp = tmp.split(",")
-            if new_ticket in tmp:
-                continue
-            tmp.append(new_ticket)
-            self.prj_dfs[name].loc[prev_ticket, "Next_task"] = ",".join(tmp)
+        name = self.params.user_name
+        keys = ["Prev_task", "Next_task"]
+        for key, opp_key in zip(keys, keys[::-1]):
+            old_conn_ids, new_conn_ids = update_items.get(key, ["", ""])
+            old_conn_ids = set(old_conn_ids.split(","))
+            new_conn_ids = set(new_conn_ids.split(","))
 
-        for next_ticket in next_tickets:
-            if next_ticket not in self.prj_dfs[name].index.values.tolist():
-                continue
-            tmp = self.prj_dfs[name].loc[next_ticket, "Prev_task"]
-            tmp = tmp.split(",")
-            if new_ticket in tmp:
-                continue
-            tmp.append(new_ticket)
-            self.prj_dfs[name].loc[next_ticket, "Prev_task"] = ",".join(tmp)
+            deleted_ids = old_conn_ids - new_conn_ids
+            added_ids = new_conn_ids - old_conn_ids
+
+            for tid in deleted_ids:
+                if not tid:
+                    continue
+                tmp = self.prj_dfs[name].loc[tid, opp_key]
+                tmp = tmp.split(",")
+                if ticket_id in tmp:
+                    tmp.remove(ticket_id)
+                    self.prj_dfs[name].loc[tid, opp_key] = ",".join(tmp)
+
+            for tid in added_ids:
+                if not tid:
+                    continue
+                tmp = self.prj_dfs[name].loc[tid, opp_key]
+                tmp = tmp.split(",")
+                if ticket_id not in tmp:
+                    tmp.append(ticket_id)
+                    self.prj_dfs[name].loc[tid, opp_key] = ",".join(tmp)
 
 
     def display_values_in_df_to_r1(self, df):
@@ -1271,7 +1313,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         self.values[k] = df["Status"]
         self.window[k].update(self.values[k])
 
-        self._r1_pre_next_ticket_table_update()
+        self._r1_pre_next_ticket_table_update(df)
         self.set_color_of_boxes_inputted_invalid_value_r1()
         self.set_right_click_menu_of_prj12_task()
 
@@ -1305,9 +1347,8 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
 
         r1_inputs = [self.values[f"-r1_inp_{i:02d}-"] for i in range(len(self.r1_inp))]
 
-        # previous and next task
-        prev_ticket = [self.r1_tables[1][i] for i in self.values["-r1_tbl_02-"] if i]
-        next_ticket = [self.r1_tables[1][i] for i in self.values["-r1_tbl_03-"] if i]
+        prev_ticket = self.r1_ticket_connections["p"]
+        next_ticket = self.r1_ticket_connections["n"]
         prev_ticket = ",".join(prev_ticket)
         next_ticket = ",".join(next_ticket)
 
@@ -1335,45 +1376,66 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         return pd.DataFrame([ticket_new], columns=self.params.columns, index=[index])
 
 
-    def _r1_pre_next_ticket_table_update(self):
+    def _r1_pre_next_ticket_table_update(self, df=None):
         """
         1. read r1 input box items 
         2. make list which has task-tickets in current prj and show r1 table
         3. select table rows which are defined in current ticket 
            if current ticket prev or next ticket is defined. 
         """
-        prj1 = self.values[f"-r1_inp_00-"]
-        prj2 = self.values[f"-r1_inp_01-"]
-        task = self.values[f"-r1_inp_02-"]
-        ticket = self.values[f"-r1_inp_03-"]
-        name = self.values[f"-r1_cmb_00-"]
+        # prj1 = self.values[f"-r1_inp_00-"]
+        # prj2 = self.values[f"-r1_inp_01-"]
+        # task = self.values[f"-r1_inp_02-"]
+        # ticket = self.values[f"-r1_inp_03-"]
+        # name = self.values[f"-r1_cmb_00-"]
 
-        # selected_prev = self.values["-r1_tbl_02-"]
-        # selected_next = self.values["-r1_tbl_03-"]
+        # df_tmp = self.prj_dfs[name].sort_values("Priority")
+        # df_tmp = df_tmp.query(f"Project1 == '{prj1}' & Project2 == '{prj2}' & Status != 'Done'").copy()
+        # df_tmp["task-ticket"] = df_tmp['Task'] + "-" + df_tmp['Ticket']
+        # tickets = df_tmp["task-ticket"].values.tolist()
+        # tids = df_tmp.index.tolist()
+        # self.r1_tables = (["None"] + tickets, ["None"] + tids)
 
-        df_tmp = self.prj_dfs[name].sort_values("Priority")
-        df_tmp = df_tmp.query(f"Project1 == '{prj1}' & Project2 == '{prj2}' & Status != 'Done'").copy()
-        df_tmp["task-ticket"] = df_tmp['Task'] + "-" + df_tmp['Ticket']
-        tickets = df_tmp["task-ticket"].values.tolist()
-        tids = df_tmp.index.tolist()
-        self.r1_tables = (["None"] + tickets, ["None"] + tids)
+        # df_tmp = df_tmp.query(f"Task == '{task}' & Ticket == '{ticket}'")
+        # if not df_tmp.empty:
+        #     current_ticket_id = df_tmp.index.item()
+        #     prev_ticket = self.prj_dfs[name].loc[current_ticket_id, "Prev_task"].split(",")
+        #     next_ticket = self.prj_dfs[name].loc[current_ticket_id, "Next_task"].split(",")
+        #     def_perv = [i for i, tid in enumerate(self.r1_tables[1]) if tid in prev_ticket]
+        #     def_next = [i for i, tid in enumerate(self.r1_tables[1]) if tid in next_ticket]
+        # else:
+        #     def_perv = []
+        #     def_next = []
 
-        df_tmp = df_tmp.query(f"Task == '{task}' & Ticket == '{ticket}'")
-        if not df_tmp.empty:
-            current_ticket_id = df_tmp.index.item()
-            prev_ticket = self.prj_dfs[name].loc[current_ticket_id, "Prev_task"].split(",")
-            next_ticket = self.prj_dfs[name].loc[current_ticket_id, "Next_task"].split(",")
-            def_perv = [i for i, tid in enumerate(self.r1_tables[1]) if tid in prev_ticket]
-            def_next = [i for i, tid in enumerate(self.r1_tables[1]) if tid in next_ticket]
-        else:
-            def_perv = []
-            def_next = []
+        # self.window["-r1_tbl_02-"].update(values=self.r1_tables[0], select_rows=def_perv)
+        # self.window["-r1_tbl_03-"].update(values=self.r1_tables[0], select_rows=def_next)
 
-        self.window["-r1_tbl_02-"].update(values=self.r1_tables[0], select_rows=def_perv)
-        self.window["-r1_tbl_03-"].update(values=self.r1_tables[0], select_rows=def_next)
+        # TODO : 上の要らないのは消す
+        if isinstance(df, pd.core.series.Series):
+            p = df["Prev_task"].split(",")
+            self.r1_ticket_connections["p"] = [tid for tid in p if tid]
+            n = df["Next_task"].split(",")
+            self.r1_ticket_connections["n"] = [tid for tid in n if tid]
+            self.display_connections_dic_to_r1_table()
 
-        return
 
+    def display_connections_dic_to_r1_table(self):
+        p, n = [], []
+        for tid in self.r1_ticket_connections["p"]:
+            c, ds = self._get_is_ticket_and_series_from_ticket_id(tid)
+            if not c:
+                continue
+            ticket = f"{ds['Project1']}-{ds['Project2']}-{ds['Task']}-{ds['Ticket']}"
+            p.append(ticket)
+        for tid in self.r1_ticket_connections["n"]:
+            c, ds = self._get_is_ticket_and_series_from_ticket_id(tid)
+            if not c:
+                continue
+            ticket = f"{ds['Project1']}-{ds['Project2']}-{ds['Task']}-{ds['Ticket']}"
+            n.append(ticket)
+        self.window["-r1_tbl_04-"].update(values=p)
+        self.window["-r1_tbl_05-"].update(values=n)
+    
 
     def set_right_click_menu_of_prj12_task(self):
 
@@ -1413,6 +1475,23 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
 
         self.set_color_of_boxes_inputted_invalid_value_r1()
         self.set_color_of_boxes_inputted_invalid_value_r6()
+
+
+    def delete_ticket_from_prev_next_table(self, eid):
+        if eid == "Prev":
+            key, table_id = "p", "04"
+        if eid == "Next":
+            key, table_id = "n", "05"
+        rows = self.values[f"-r1_tbl_{table_id}-"]
+        tickets = self.r1_ticket_connections[key]
+        if not rows:
+            return
+        for row in rows[::-1]:
+            if row > len(tickets)-1:
+                continue
+            del tickets[row]
+        self.r1_ticket_connections[key] = tickets
+        self.display_connections_dic_to_r1_table()
 
 
     # r2 =======================================================================

@@ -202,6 +202,8 @@ def gui_main(sch_m):
         if item == "right_menu":
             sch_m.input_prj12_and_task_by_right_click(event)
             sch_m.set_right_click_menu_of_prj12_task()
+        if item == "right_menu_tbl":
+            sch_m.delete_ticket_from_prev_next_table(eid)
         return True
 
     if pos == "r2":  # right tab2 -daily

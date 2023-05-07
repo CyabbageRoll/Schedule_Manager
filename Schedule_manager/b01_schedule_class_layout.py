@@ -106,7 +106,7 @@ class ScheduleManageLayout:
         self.l1_frm_cal = [[sg.Frame("", [[self.l1_grp_cal2, self.l1_grp_cal]], border_width=0)]]
 
         # graph for schedule
-        grp_r_click_menu = ["menu", ["Scheduling_", "Edit_"] + [f"{s}_" for s in self.params.status] + ["Follow_up_"]]
+        grp_r_click_menu = ["menu", ["Scheduling_", "Edit_"] + [f"{s}_" for s in self.params.status] + ["Follow_up_"] + ["Prev_Ticket_", "Next_Ticket_"]]
         self.l1_grp = [sg.Graph((self.sizes.left_tab1_canvas_w, self.sizes.left_tab1_canvas_h), gbl, gtr, pad=0, background_color=self.theme.graph_background, key=f"-l1_grp_{i:02d}-", right_click_menu=grp_r_click_menu, enable_events=True) for i in range(len(self.prj))]
         self.l1_grp2 = [sg.Graph((self.sizes.often_width, self.sizes.left_tab1_canvas_h), gbl, gtr, pad=0, background_color=self.theme.graph_background, key=f"-l1_grp2_{i:02d}-", right_click_menu=grp_r_click_menu, enable_events=True) for i in range(len(self.prj))]
         self.l1_frm = [[sg.Frame(p, [[g2, g]], key=f"-l1_frm_{i:02d}-", border_width=0)] for i, (p, g, g2) in enumerate(zip(self.prj, self.l1_grp, self.l1_grp2))]
@@ -258,17 +258,27 @@ class ScheduleManageLayout:
                   r1_cbx]
         r1_clm = [sg.Column(layout)]
 
-        r1_txt1 = [sg.Text("➡ 🎫 ➡")]
-        r1_txt2 = [sg.Text("Previous")]
-        r1_txt3 = [sg.Text("Next")]
-        r1_tbl2 = [sg.Table([["Tickets"]], auto_size_columns=False, def_col_width=self.sizes.r1_table_width, row_height=self.sizes.tbl_row_hight, num_rows=40, vertical_scroll_only=True, justification="left", enable_events=False, text_color=self.theme.text_table, background_color=self.theme.table_background, key="-r1_tbl_02-")]
-        r1_tbl3 = [sg.Table([["Tickets"]], auto_size_columns=False, def_col_width=self.sizes.r1_table_width, row_height=self.sizes.tbl_row_hight, num_rows=40, vertical_scroll_only=True, justification="left", enable_events=False, text_color=self.theme.text_table, background_color=self.theme.table_background, key="-r1_tbl_03-")]
-        r1_clm2 = [sg.Column([r1_txt2, r1_tbl2])]
-        r1_clm3 = [sg.Column([r1_txt3, r1_tbl3])]
-        r1_clm1 = [sg.Column([r1_clm2 + r1_txt1 + r1_clm3])]
-        r1_txt4 = [sg.Text("", key="-r1_txt_04-")]
+        # r1_txt1 = [sg.Text("➡ 🎫 ➡")]
+        # r1_txt2 = [sg.Text("Previous")]
+        # r1_txt3 = [sg.Text("Next")]
+        r1_txt22 = [sg.Text("Connections - Previous")]
+        r1_txt32 = [sg.Text("Connections - Next")]
+        # r1_tbl2 = [sg.Table([["Tickets"]], auto_size_columns=False, def_col_width=self.sizes.r1_table_width, row_height=self.sizes.tbl_row_hight, num_rows=5, vertical_scroll_only=True, justification="left", enable_events=False, text_color=self.theme.text_table, background_color=self.theme.table_background, key="-r1_tbl_02-")]
+        # r1_tbl3 = [sg.Table([["Tickets"]], auto_size_columns=False, def_col_width=self.sizes.r1_table_width, row_height=self.sizes.tbl_row_hight, num_rows=5, vertical_scroll_only=True, justification="left", enable_events=False, text_color=self.theme.text_table, background_color=self.theme.table_background, key="-r1_tbl_03-")]
+        tbl_r_click_menu1 = ["r1_ticket1", ["Delete_Prev:"]]
+        tbl_r_click_menu2 = ["r1_ticket2", ["Delete_Next:"]]
+        r1_tbl4 = [sg.Table([["None"]], auto_size_columns=False, def_col_width=self.sizes.r1_table_width*3, row_height=self.sizes.tbl_row_hight, num_rows=6, vertical_scroll_only=True, justification="left", enable_events=False, text_color=self.theme.text_table, background_color=self.theme.table_background, right_click_menu=tbl_r_click_menu1, key="-r1_tbl_04-")]
+        r1_tbl5 = [sg.Table([["None"]], auto_size_columns=False, def_col_width=self.sizes.r1_table_width*3, row_height=self.sizes.tbl_row_hight, num_rows=6, vertical_scroll_only=True, justification="left", enable_events=False, text_color=self.theme.text_table, background_color=self.theme.table_background, right_click_menu=tbl_r_click_menu2, key="-r1_tbl_05-")]
+        # r1_btn21 = [sg.Button("🗑️", size=(2, 1), key="-r1_btn_21-")]
+        # r1_btn22 = [sg.Button("🗑️", size=(2, 1), key="-r1_btn_22-")]
 
-        r1 = [sg.Tab("planing", [r1_clm, r1_clm1, r1_txt4], key="r1")]
+        # r1_clm2 = [sg.Column([r1_txt2, r1_tbl2])]
+        # r1_clm3 = [sg.Column([r1_txt3, r1_tbl3])]
+        # r1_clm1 = [sg.Column([r1_clm2 + r1_txt1 + r1_clm3])]
+        r1_clm4 = [sg.Column([r1_txt22, r1_tbl4, r1_txt32, r1_tbl5])]
+        r1_txt4 = [sg.Text("Ticket ID : ", key="-r1_txt_05-", pad=0), sg.Text("", key="-r1_txt_04-", pad=0)]
+
+        r1 = [sg.Tab("planing", [r1_clm, r1_clm4, r1_txt4], key="r1")]
         return r1
 
 
