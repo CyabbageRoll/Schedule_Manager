@@ -400,56 +400,70 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
             often_tmp = often_ticket_pos_df[often_ticket_pos_df["prj"] == prj].copy()
             todo_tmp["begin_pos"] = (todo_tmp["begin_pos"] * ticket_width_ratio) // 100
             todo_tmp["end_pos"] = (todo_tmp["end_pos"] * ticket_width_ratio) // 100
-            prev_task = ""
-            i = -1
             # todo
-            for idx in todo_tmp.index:
-                i += 1
-                items = todo_tmp.loc[idx]
-                x0, x1 = int(items["begin_pos"]), int(items["end_pos"])
-                y0 = -(i % 3) * 30 + 80
-                color = items["Color"] if items["Color"] else self.theme.graph_unknown
-                tt1, tt2 = f" {items['Task']}", ""
-                if self.values["-l1_cbx_04-"]: # combine
+            for turn in ["draw_rectangle", "draw_text"]:
+                prev_task = ""
+                i = -1
+                for idx in todo_tmp.index:
+                    i += 1
+                    items = todo_tmp.loc[idx]
+                    x0, x1 = int(items["begin_pos"]), int(items["end_pos"])
+                    y0 = -(i % 3) * 30 + 80
+                    used_hour = items["Man_hour_reg"] * time_to_pix * ticket_width_ratio // 100
+                    xp = max(0, x0 - used_hour)
+
+                    is_continues = False
                     if items["Task"] == prev_task:
-                        tt1, tt2 = "", ""
+                        is_continues = True
+                    prev_task = items["Task"]
+                    
+                    if self.values["-l1_cbx_04-"] and is_continues: # combine
                         i -= 1
                         y0 =  -(i % 3) * 30 + 80
-                    prev_task = items["Task"]
-                else:
-                    if self.values["-l1_cbx_01-"]: # in charge
-                        tt2 += f" {items['In_charge']}"
-                    if self.values["-l1_cbx_02-"]: # hour
-                        tt2 += f" ({items['Man_hour_reg']:2.2f}/{items['Update_Estimation']:2.2f})"
-                    if self.values["-l1_cbx_03-"]: # ticket
-                        if tt2:
-                            tt1 += f"-{items['Ticket']}"
-                        else:
-                            tt2 = f" {items['Ticket']}"
-                used_hour = items["Man_hour_reg"] * time_to_pix * ticket_width_ratio // 100
-                xp = max(0, x0 - used_hour)
-                self.l1_grp[prj_id].draw_rectangle((xp, y0-15), (x0, y0+15), line_color=color, line_width=1)
-                self.l1_grp[prj_id].draw_rectangle((x0, y0-15),(x1, y0+15), fill_color=color, line_color=color, line_width=1)
-                self.l1_grp[prj_id].draw_text(tt1, (x0, y0+7), color=self.theme.graph_text, font=(self.params.font, task_font_size), text_location=sg.TEXT_LOCATION_LEFT)
-                self.l1_grp[prj_id].draw_text(tt2, (x0, y0-7), color=self.theme.graph_text, font=(self.params.font, task_font_size-2), text_location=sg.TEXT_LOCATION_LEFT)
-                # color set depend on due date
-                if todo_tmp.loc[idx, "over"] == None:
-                    color = self.theme.graph_vertical_line
-                    width = 1
-                elif todo_tmp.loc[idx, "over"] == False:
-                    color = self.theme.graph_vertical_line_due
-                    width = 2
-                else:
-                    color = self.theme.alert
-                    width = 3
-                self.l1_grp[prj_id].draw_line((x1, 0), (x1, 100), color=color, width=width)
 
-                if self.graph_positions_todo[prj_id][-1] >= x0:
-                    self.graph_positions_todo[prj_id].append(x1)
-                    self.graph_ticket_ids_todo[prj_id].append(idx)
-                else:
-                    self.graph_positions_todo[prj_id].extend([x0, x1])
-                    self.graph_ticket_ids_todo[prj_id].extend([None, idx])
+                    if turn == "draw_rectangle":
+                        color = items["Color"] if items["Color"] else self.theme.graph_unknown
+                        self.l1_grp[prj_id].draw_rectangle((xp, y0-15), (x0, y0+15), line_color=color, line_width=1)
+                        self.l1_grp[prj_id].draw_rectangle((x0, y0-15),(x1, y0+15), fill_color=color, line_color=color, line_width=1)
+
+                        # color set depend on due date
+                        if todo_tmp.loc[idx, "over"] == None:
+                            color = self.theme.graph_vertical_line
+                            width = 1
+                        elif todo_tmp.loc[idx, "over"] == False:
+                            color = self.theme.graph_vertical_line_due
+                            width = 2
+                        else:
+                            color = self.theme.alert
+                            width = 3
+                        self.l1_grp[prj_id].draw_line((x1, 0), (x1, 100), color=color, width=width)
+
+                        if self.graph_positions_todo[prj_id][-1] >= x0:
+                            self.graph_positions_todo[prj_id].append(x1)
+                            self.graph_ticket_ids_todo[prj_id].append(idx)
+                        else:
+                            self.graph_positions_todo[prj_id].extend([x0, x1])
+                            self.graph_ticket_ids_todo[prj_id].extend([None, idx])
+                    
+                    else:
+                        if is_continues:
+                            tt1, tt2 = "", ""
+                        else:
+                            tt1, tt2 = f" {items['Task']}", ""
+                        if not self.values["-l1_cbx_04-"]: # combine
+                            if self.values["-l1_cbx_01-"]: # in charge
+                                tt2 += f" {items['In_charge']}"
+                            if self.values["-l1_cbx_02-"]: # hour
+                                tt2 += f" ({items['Man_hour_reg']:2.2f}/{items['Update_Estimation']:2.2f})"
+                            if self.values["-l1_cbx_03-"]: # ticket
+                                if tt2:
+                                    tt1 += f"-{items['Ticket']}"
+                                else:
+                                    tt2 = f" {items['Ticket']}"
+
+                        self.l1_grp[prj_id].draw_text(tt1, (x0, y0+7), color=self.theme.graph_text, font=(self.params.font, task_font_size), text_location=sg.TEXT_LOCATION_LEFT)
+                        self.l1_grp[prj_id].draw_text(tt2, (x0, y0-7), color=self.theme.graph_text, font=(self.params.font, task_font_size-1), text_location=sg.TEXT_LOCATION_LEFT)
+
             self.graph_positions_todo[prj_id].append(999999)
             self.graph_ticket_ids_todo[prj_id].append(None)
 

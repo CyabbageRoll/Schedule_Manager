@@ -92,7 +92,7 @@ class ScheduleManageLayout:
         hed += [sg.Button("+", key="-l1_btn_01-", size=(2,1))]
         hed += [sg.Text("100%", key="-l1_txt_00-")]
         hed += [sg.Checkbox(text="In Charge", default=False, key="-l1_cbx_01-", size=(self.sizes.header_chk_box_w, self.sizes.header_chk_box_h), p=0, enable_events=True)]
-        hed += [sg.Checkbox(text="hours", default=True, key="-l1_cbx_02-", size=(self.sizes.header_chk_box_w, self.sizes.header_chk_box_h), p=0, enable_events=True)]
+        hed += [sg.Checkbox(text="hours", default=False, key="-l1_cbx_02-", size=(self.sizes.header_chk_box_w, self.sizes.header_chk_box_h), p=0, enable_events=True)]
         hed += [sg.Checkbox(text="Ticket", default=True, key="-l1_cbx_03-", size=(self.sizes.header_chk_box_w, self.sizes.header_chk_box_h), p=0, enable_events=True)]
         hed += [sg.Checkbox(text="Combine Task", default=False, key="-l1_cbx_04-", size=(self.sizes.header_chk_box_w, self.sizes.header_chk_box_h), p=0, enable_events=True)]
         hed += [sg.Text(text=f"font_size", key="-l1_txt_01-")]
