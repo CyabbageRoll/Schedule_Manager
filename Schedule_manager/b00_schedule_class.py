@@ -649,10 +649,10 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
             row = self.l3_tbl_df.index.get_loc(ticket_id)
         
         self.l3_tbl_df = self._convert_df_datetime_to_str_l3_tbl(self.l3_tbl_df)
-        self.window["-l3_tbl_00-"].update(values=self.l3_tbl_df.values.tolist(), select_rows=[row], row_colors=table_colors)
-        self.personal_memo["set"]["table_query"] = query_arg
-        self.personal_memo["set"]["table_sort"] = ",".join(sort_arg)
-
+        if self.l3_tbl_df.values.tolist():
+            self.window["-l3_tbl_00-"].update(values=self.l3_tbl_df.values.tolist(), select_rows=[row], row_colors=table_colors)
+            self.personal_memo["set"]["table_query"] = query_arg
+            self.personal_memo["set"]["table_sort"] = ",".join(sort_arg)
 
         return
 
@@ -1677,6 +1677,9 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
             update_tickets.add(ticket_id)
 
         for ticket_id in update_tickets:
+            if ticket_id not in self.prj_dfs[name].index:
+                self.logger.debag("Error. try to record ticket not existed")
+                continue
             ticket_record_se = self.trk_dfs[name].loc[ticket_id] 
             did_date = ticket_record_se[ticket_record_se > 0].index.values.tolist()
             did_date.sort()
@@ -2558,3 +2561,4 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
             if reason_txt == None:
                 return False
             return True
+        return True
