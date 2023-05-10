@@ -130,6 +130,9 @@ def gui_main(sch_m):
                 sch_m.shrink_l1_chart()
             if eid == 1:
                 sch_m.enlarge_l1_chart()
+            if eid in [2, 3]:
+                pm = eid*2 - 5
+                sch_m.change_font_size(pm)
         if item == "cbx":
             sch_m.l1_chart_draw()
         if item[:3] == "grp":

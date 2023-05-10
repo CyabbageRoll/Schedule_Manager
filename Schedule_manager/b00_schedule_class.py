@@ -351,6 +351,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         tmp_df = self._create_temporary_df_for_cal_position(self.prj_dfs[name], "Often")
         often_ticket_pos_df = self._calc_ticket_position(tmp_df)
         time_to_pix = 100 / self.params.hour_in_date
+        task_font_size = int(self.window["-l1_txt_02-"].get())
         # draw calendar top of the L1 tab
         begin_day = datetime.date.today()
         if width_ratio <= -50:
@@ -429,18 +430,18 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
                 xp = max(0, x0 - used_hour)
                 self.l1_grp[prj_id].draw_rectangle((xp, y0-15), (x0, y0+15), line_color=color, line_width=1)
                 self.l1_grp[prj_id].draw_rectangle((x0, y0-15),(x1, y0+15), fill_color=color, line_color=color, line_width=1)
-                self.l1_grp[prj_id].draw_text(tt1, (x0, y0+7), color=self.theme.graph_text, font=(self.params.font, self.params.font_size), text_location=sg.TEXT_LOCATION_LEFT)
-                self.l1_grp[prj_id].draw_text(tt2, (x0, y0-7), color=self.theme.graph_text, font=(self.params.font, self.params.font_size-2), text_location=sg.TEXT_LOCATION_LEFT)
+                self.l1_grp[prj_id].draw_text(tt1, (x0, y0+7), color=self.theme.graph_text, font=(self.params.font, task_font_size), text_location=sg.TEXT_LOCATION_LEFT)
+                self.l1_grp[prj_id].draw_text(tt2, (x0, y0-7), color=self.theme.graph_text, font=(self.params.font, task_font_size-2), text_location=sg.TEXT_LOCATION_LEFT)
                 # color set depend on due date
                 if todo_tmp.loc[idx, "over"] == None:
                     color = self.theme.graph_vertical_line
                     width = 1
                 elif todo_tmp.loc[idx, "over"] == False:
                     color = self.theme.graph_vertical_line_due
-                    width = 3
+                    width = 2
                 else:
                     color = self.theme.alert
-                    width = 5
+                    width = 3
                 self.l1_grp[prj_id].draw_line((x1, 0), (x1, 100), color=color, width=width)
 
                 if self.graph_positions_todo[prj_id][-1] >= x0:
@@ -467,7 +468,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
                 y0 = -row * 18 + 86
                 color = items["Color"] if items["Color"] else self.theme.graph_unknown
                 self.l1_grp2[prj_id].draw_rectangle((x0+100, y0-7),(x1-100, y0+7), fill_color=color, line_color=color, line_width=1)
-                self.l1_grp2[prj_id].draw_text(f" {items['Task']}-{items['Ticket']}", (x0, y0), color=self.theme.graph_text, font=(self.params.font, self.params.font_size), text_location=sg.TEXT_LOCATION_LEFT)
+                self.l1_grp2[prj_id].draw_text(f" {items['Task']}-{items['Ticket']}", (x0, y0), color=self.theme.graph_text, font=(self.params.font, task_font_size), text_location=sg.TEXT_LOCATION_LEFT)
                 self.l1_grp2[prj_id].draw_line((x0, 0), (x0, 100), color=self.theme.graph_vertical_line, width=1)
                 self.graph_ticket_ids_often[prj_id][row][col] = idx
 
@@ -502,6 +503,12 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
     
     def shrink_l1_chart(self):
         width = self.update_l1_size_text(-1)
+        self.l1_chart_draw()
+
+    def change_font_size(self, pm):
+        font_size = int(self.window["-l1_txt_02-"].get())
+        font_size += pm
+        self.window["-l1_txt_02-"].update(f"{font_size}")
         self.l1_chart_draw()
 
 
