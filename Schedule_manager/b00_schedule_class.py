@@ -1405,34 +1405,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
         3. select table rows which are defined in current ticket 
            if current ticket prev or next ticket is defined. 
         """
-        # prj1 = self.values[f"-r1_inp_00-"]
-        # prj2 = self.values[f"-r1_inp_01-"]
-        # task = self.values[f"-r1_inp_02-"]
-        # ticket = self.values[f"-r1_inp_03-"]
-        # name = self.values[f"-r1_cmb_00-"]
 
-        # df_tmp = self.prj_dfs[name].sort_values("Priority")
-        # df_tmp = df_tmp.query(f"Project1 == '{prj1}' & Project2 == '{prj2}' & Status != 'Done'").copy()
-        # df_tmp["task-ticket"] = df_tmp['Task'] + "-" + df_tmp['Ticket']
-        # tickets = df_tmp["task-ticket"].values.tolist()
-        # tids = df_tmp.index.tolist()
-        # self.r1_tables = (["None"] + tickets, ["None"] + tids)
-
-        # df_tmp = df_tmp.query(f"Task == '{task}' & Ticket == '{ticket}'")
-        # if not df_tmp.empty:
-        #     current_ticket_id = df_tmp.index.item()
-        #     prev_ticket = self.prj_dfs[name].loc[current_ticket_id, "Prev_task"].split(",")
-        #     next_ticket = self.prj_dfs[name].loc[current_ticket_id, "Next_task"].split(",")
-        #     def_perv = [i for i, tid in enumerate(self.r1_tables[1]) if tid in prev_ticket]
-        #     def_next = [i for i, tid in enumerate(self.r1_tables[1]) if tid in next_ticket]
-        # else:
-        #     def_perv = []
-        #     def_next = []
-
-        # self.window["-r1_tbl_02-"].update(values=self.r1_tables[0], select_rows=def_perv)
-        # self.window["-r1_tbl_03-"].update(values=self.r1_tables[0], select_rows=def_next)
-
-        # TODO : 上の要らないのは消す
         if isinstance(df, pd.core.series.Series):
             p = df["Prev_task"].split(",")
             self.r1_ticket_connections["p"] = [tid for tid in p if tid]
@@ -1497,7 +1470,8 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
 
         self.set_color_of_boxes_inputted_invalid_value_r1()
         self.set_color_of_boxes_inputted_invalid_value_r6()
-
+        self.window["-r1_tbl_04-"].update(values=[])
+        self.window["-r1_tbl_05-"].update(values=[])
 
     def delete_ticket_from_prev_next_table(self, eid):
         if eid == "Prev":
