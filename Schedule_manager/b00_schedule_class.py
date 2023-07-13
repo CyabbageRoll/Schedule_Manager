@@ -729,7 +729,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
                     continue
 
                 self.prj_dfs[in_charge] = self.prj_dfs[in_charge].append(input_df)
-                self.update_prev_next_task(input_df)
+                self.update_prev_next_task(input_df, update_items={})
                 sg.popup_no_buttons("new ticket has been added", auto_close=True, auto_close_duration=1)
                 self.delete_order_tickets(idx)
 
@@ -1275,6 +1275,7 @@ class ScheduleManage(ScheduleManageLayout, ScheduleManageIO):
            add new ticket id to "previous ticket" of "next ticket".
         Args:
             input_df (pandas dataframe): update or new ticket dataframe
+            update_items (dictionary) : include current prev and next task ids.
         """
 
         name = self.params.user_name
